@@ -2,6 +2,8 @@
 
 🚗 **Revolutionary car control through AI voice commands**
 
+🌐 **Live Demo**: Auto-deployed from GitHub to Netlify
+
 ## 🌟 Features
 
 - **AI Voice Assistant**: Real-time speech recognition and text-to-speech
