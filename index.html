@@ -3102,7 +3102,7 @@
 
             try {
                 // AI greeting
-                await aiVoice.speak("AUTOMOTIVE AI SYSTEM ACTIVATED. AWAITING VOICE COMMAND INPUT.");
+                await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
                 setTimeout(async () => {
                     const randomIndex = Math.floor(Math.random() * demoCommands.length);
@@ -3190,7 +3190,7 @@
             statusEl.style.color = '#4285f4';
 
             try {
-                await aiVoice.speak("VOICE RECOGNITION SYSTEM ONLINE. SPEAK YOUR COMMAND NOW.");
+                await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
                 const command = await aiVoice.listen();
                 statusEl.textContent = `You said: "${command}"`;
