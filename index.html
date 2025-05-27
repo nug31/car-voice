@@ -2443,16 +2443,22 @@
             await carDataManager.connectSmartcarAPI(apiKey, vehicleId);
         }
 
-        // Simple Car Control Functions
+        // Simple Car Control Functions - NOW WITH VOICE
         function startEngine() {
             const statusEl = document.getElementById('demoStatus');
             statusEl.textContent = 'Starting engine...';
             statusEl.style.color = '#34a853';
 
+            // Speak the action
+            aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE.");
+
             setTimeout(() => {
                 const response = carDataManager.startEngine();
                 statusEl.textContent = response;
                 statusEl.style.color = '#4285f4';
+
+                // Speak the result
+                aiVoice.speakRobotic("ENGINE ACTIVATION COMPLETE. VEHICLE SYSTEMS OPERATIONAL.");
             }, 1000);
         }
 
@@ -2461,10 +2467,16 @@
             statusEl.textContent = 'Stopping engine...';
             statusEl.style.color = '#ea4335';
 
+            // Speak the action
+            aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE.");
+
             setTimeout(() => {
                 const response = carDataManager.stopEngine();
                 statusEl.textContent = response;
                 statusEl.style.color = '#4285f4';
+
+                // Speak the result
+                aiVoice.speakRobotic("ENGINE DEACTIVATION COMPLETE. VEHICLE SECURED.");
             }, 1000);
         }
 
@@ -2473,21 +2485,24 @@
             statusEl.textContent = 'Checking car status...';
             statusEl.style.color = '#fbbc05';
 
-            setTimeout(() => {
+            // Speak the action
+            aiVoice.speakRobotic("INITIATING VEHICLE STATUS SCAN.");
+
+            setTimeout(async () => {
                 const response = carDataManager.getCarStatus();
                 statusEl.textContent = response;
                 statusEl.style.color = '#4285f4';
+
+                // Speak detailed status
+                const detailedStatus = await aiVoice.getCarStatusSpeech();
+                aiVoice.speakRobotic(detailedStatus);
             }, 1000);
         }
 
-        /* ========================================
-         * COMMENTED AI VOICE SYSTEM
-         * ========================================
-         * Uncomment the code below to enable AI voice functionality
-         * This includes speech synthesis, voice recognition, and robotic voice features
-         */
-
-        /*
+        // ========================================
+        // AI VOICE SYSTEM - NOW ACTIVE
+        // ========================================
+        // Full AI voice functionality with speech synthesis, voice recognition, and robotic voice features
         // AI Voice System Class
         class AIVoiceSystem {
             constructor() {
@@ -3146,13 +3161,11 @@
             }
         }
 
-        // Initialize AI Voice System (commented out)
-        // const aiVoice = new AIVoiceSystem();
+        // Initialize AI Voice System - NOW ACTIVE
+        const aiVoice = new AIVoiceSystem();
 
-        // Voice Control Functions (commented out)
+        // Voice Control Functions - NOW ACTIVE
         function populateVoiceSelector() {
-            // Uncomment to enable voice selector population
-            /*
             const voiceSelect = document.getElementById('voiceSelect');
             if (!voiceSelect || !aiVoice.voices) return;
 
@@ -3180,12 +3193,9 @@
             if (aiVoice.selectedVoice) {
                 voiceSelect.value = aiVoice.selectedVoice.name;
             }
-            */
         }
 
         function changeVoice() {
-            // Uncomment to enable voice changing
-            /*
             const voiceSelect = document.getElementById('voiceSelect');
             const selectedVoiceName = voiceSelect.value;
 
@@ -3195,12 +3205,9 @@
                 // Re-initialize to auto-select male voice
                 aiVoice.initializeVoices();
             }
-            */
         }
 
         function testVoice() {
-            // Uncomment to enable voice testing
-            /*
             try {
                 // Check if speech synthesis is supported
                 if (!('speechSynthesis' in window)) {
@@ -3215,12 +3222,9 @@
                 console.error('Voice test error:', error);
                 alert('Voice test failed. Please check browser compatibility.');
             }
-            */
         }
 
         function updateRoboticSettings() {
-            // Uncomment to enable robotic settings updates
-            /*
             const speechRate = document.getElementById('speechRate').value;
             const voicePitch = document.getElementById('voicePitch').value;
             const glitchLevel = document.getElementById('glitchLevel').value;
@@ -3245,12 +3249,9 @@
                 glitch: glitchLevel + '%',
                 mode: roboticMode
             });
-            */
         }
 
         function applyRoboticMode(mode) {
-            // Uncomment to enable robotic mode application
-            /*
             switch(mode) {
                 case 'military':
                     aiVoice.roboticSettings.emphasisRate = 0.5;
@@ -3277,12 +3278,9 @@
                     aiVoice.roboticSettings.emphasisPitch = 0.3;
                     aiVoice.roboticSettings.pauseDuration = 300;
             }
-            */
         }
 
         function testRoboticMode() {
-            // Uncomment to enable robotic mode testing
-            /*
             const mode = document.getElementById('roboticMode').value;
             const testMessages = {
                 'standard': 'Standard robotic protocol activated. All systems operational.',
@@ -3298,30 +3296,40 @@
                 console.error('Mode test error:', error);
                 aiVoice.speak(testMessages[mode] || testMessages.standard);
             }
-            */
         }
 
-        // Voice Demo Functions (commented out)
+        // Voice Demo Functions - NOW ACTIVE
         function startDemo() {
-            // Uncomment to enable simulated voice demo
-            /*
             const statusEl = document.getElementById('demoStatus');
-            statusEl.textContent = 'Voice demo is currently disabled. Uncomment AI voice code to enable.';
-            statusEl.style.color = '#fbbc05';
-            */
+            statusEl.textContent = '🤖 AI Voice Demo Starting...';
+            statusEl.style.color = '#4285f4';
+
+            // Start voice demo with robotic speech
+            aiVoice.speakRobotic("VOICE DEMONSTRATION INITIATED. ALL SYSTEMS OPERATIONAL. ROBOTIC VOICE MODULE ACTIVE.");
         }
 
         function startRealVoiceDemo() {
-            // Uncomment to enable real voice demo
-            /*
             const statusEl = document.getElementById('demoStatus');
-            statusEl.textContent = 'Real voice demo is currently disabled. Uncomment AI voice code to enable.';
-            statusEl.style.color = '#fbbc05';
-            */
+            statusEl.textContent = '🎤 Real Voice Demo Active - Speak your commands!';
+            statusEl.style.color = '#34a853';
+
+            // Start listening for voice commands
+            if (aiVoice.recognition) {
+                aiVoice.listen().then(command => {
+                    const response = aiVoice.processVoiceCommand(command);
+                    aiVoice.speakRobotic(response);
+                }).catch(error => {
+                    console.error('Voice recognition error:', error);
+                    statusEl.textContent = 'Voice recognition failed. Please try again.';
+                    statusEl.style.color = '#ea4335';
+                });
+            } else {
+                statusEl.textContent = 'Voice recognition not supported in this browser.';
+                statusEl.style.color = '#fbbc05';
+            }
         }
 
-        // END OF COMMENTED AI VOICE SYSTEM
-        */
+        // END OF AI VOICE SYSTEM
 
 
 
