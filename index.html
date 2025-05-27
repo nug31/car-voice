@@ -62,6 +62,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 1rem 2rem;
+            position: relative;
         }
 
         .logo {
@@ -1248,21 +1249,144 @@
             background: none;
             border: none;
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
-            padding: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .mobile-menu-toggle:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* Hamburger animation */
+        .mobile-menu-toggle.active {
+            background: rgba(234, 67, 53, 0.2);
+            border: 1px solid #ea4335;
+            color: #ea4335;
+        }
+
+        /* Enhanced hamburger styling */
+        .mobile-menu-toggle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(66, 133, 244, 0.1), rgba(52, 168, 83, 0.1));
+            z-index: -1;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle:hover::before {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
         }
 
         .nav-links.mobile-open {
             display: flex;
             flex-direction: column;
-            position: absolute;
-            top: 100%;
-            left: 0;
+            position: fixed;
+            top: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.95);
-            padding: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
+            padding: 80px 2rem 2rem;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-links {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links.mobile-open {
+            transform: translateX(0);
+        }
+
+        .nav-links.mobile-open li {
+            margin: 0.5rem 0;
+            opacity: 0;
+            animation: slideInRight 0.3s ease forwards;
+        }
+
+        .nav-links.mobile-open li:nth-child(1) { animation-delay: 0.1s; }
+        .nav-links.mobile-open li:nth-child(2) { animation-delay: 0.15s; }
+        .nav-links.mobile-open li:nth-child(3) { animation-delay: 0.2s; }
+        .nav-links.mobile-open li:nth-child(4) { animation-delay: 0.25s; }
+        .nav-links.mobile-open li:nth-child(5) { animation-delay: 0.3s; }
+        .nav-links.mobile-open li:nth-child(6) { animation-delay: 0.35s; }
+        .nav-links.mobile-open li:nth-child(7) { animation-delay: 0.4s; }
+
+        .nav-links.mobile-open a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .nav-links.mobile-open a:hover {
+            background: linear-gradient(45deg, #4285f4, #34a853);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        /* Mobile menu overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         /* Responsive Design */
@@ -1299,10 +1423,12 @@
 
             .nav-links {
                 display: none;
+                position: fixed;
             }
 
             .mobile-menu-toggle {
                 display: block;
+                right: 1rem;
             }
 
             /* Hero Section */
@@ -1589,21 +1715,24 @@
     </style>
 </head>
 <body>
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
     <header>
         <nav>
             <div class="logo">Car Contact Voice</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" onclick="closeMobileMenu()">🏠 Home</a></li>
+                <li><a href="#features" onclick="closeMobileMenu()">⭐ Features</a></li>
+                <li><a href="#how-it-works" onclick="closeMobileMenu()">⚙️ How It Works</a></li>
+                <li><a href="#videos" onclick="closeMobileMenu()">🎥 Videos</a></li>
+                <li><a href="#setup" onclick="closeMobileMenu()">🔧 Setup</a></li>
+                <li><a href="#dashboard" onclick="closeMobileMenu()">📊 Dashboard</a></li>
+                <li><a href="#demo" onclick="closeMobileMenu()">🎤 Demo</a></li>
+            </ul>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
                 ☰
             </button>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#home" onclick="closeMobileMenu()">Home</a></li>
-                <li><a href="#features" onclick="closeMobileMenu()">Features</a></li>
-                <li><a href="#how-it-works" onclick="closeMobileMenu()">How It Works</a></li>
-                <li><a href="#videos" onclick="closeMobileMenu()">Videos</a></li>
-                <li><a href="#setup" onclick="closeMobileMenu()">Setup</a></li>
-                <li><a href="#dashboard" onclick="closeMobileMenu()">Dashboard</a></li>
-                <li><a href="#demo" onclick="closeMobileMenu()">Demo</a></li>
-            </ul>
         </nav>
     </header>
 
@@ -2847,26 +2976,36 @@
         function toggleMobileMenu() {
             const navLinks = document.getElementById('navLinks');
             const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const overlay = document.getElementById('mobileOverlay');
 
             navLinks.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
 
             // Change hamburger icon to X when open
             if (navLinks.classList.contains('mobile-open')) {
                 menuToggle.innerHTML = '✕';
                 menuToggle.setAttribute('aria-label', 'Close menu');
+                menuToggle.style.fontSize = '1.5rem';
+                document.body.style.overflow = 'hidden'; // Prevent background scroll
             } else {
                 menuToggle.innerHTML = '☰';
                 menuToggle.setAttribute('aria-label', 'Open menu');
+                menuToggle.style.fontSize = '1.8rem';
+                document.body.style.overflow = ''; // Restore scroll
             }
         }
 
         function closeMobileMenu() {
             const navLinks = document.getElementById('navLinks');
             const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const overlay = document.getElementById('mobileOverlay');
 
             navLinks.classList.remove('mobile-open');
+            overlay.classList.remove('active');
             menuToggle.innerHTML = '☰';
             menuToggle.setAttribute('aria-label', 'Open menu');
+            menuToggle.style.fontSize = '1.8rem';
+            document.body.style.overflow = ''; // Restore scroll
         }
 
         // Close mobile menu when clicking outside
