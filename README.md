@@ -4,6 +4,14 @@
 
 🌐 **Live Demo**: Auto-deployed from GitHub to Netlify
 
+## 🚀 Deployment Status
+
+- ✅ **Auto-Deploy**: Enabled from `main` branch
+- ✅ **Build Status**: Static site (no build required)
+- ✅ **HTTPS**: Automatically enabled
+- ✅ **CDN**: Global content delivery network
+- 🔄 **Deploy Trigger**: Every push to GitHub automatically deploys
+
 ## 🌟 Features
 
 - **AI Voice Assistant**: Real-time speech recognition and text-to-speech
