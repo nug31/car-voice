@@ -2078,6 +2078,13 @@
                         </ul>
                     </div>
                     <div>
+                        <h4 style="color: #4285f4;">🎒 Trunk Control:</h4>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                            <li>"Open trunk" (buka bagasi)</li>
+                            <li>"Close trunk" (tutup bagasi)</li>
+                        </ul>
+                    </div>
+                    <div>
                         <h4 style="color: #ea4335;">❓ Help & Info:</h4>
                         <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
                             <li>"Hello" or "Hi"</li>
@@ -2910,16 +2917,25 @@
                     return "COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE. ENGINE DEACTIVATION COMPLETE.";
                 }
 
+                // Trunk control commands (buka bagasi / tutup bagasi)
+                if (lowerCommand.includes('open') && lowerCommand.includes('trunk')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED. TRUNK IS NOW OPEN.";
+                }
+
+                if (lowerCommand.includes('close') && lowerCommand.includes('trunk')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED. TRUNK IS NOW CLOSED.";
+                }
+
                 if (lowerCommand.includes('status') || lowerCommand.includes('check')) {
                     return this.getCarStatusSpeech();
                 }
 
                 if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
-                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
+                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
                 }
 
                 if (lowerCommand.includes('help')) {
-                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
+                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
                 }
 
                 if (lowerCommand.includes('battery')) {
@@ -2933,7 +2949,7 @@
                 }
 
                 // Default response
-                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, CHECK STATUS.";
+                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, OPEN TRUNK, CLOSE TRUNK, CHECK STATUS.";
             }
         }
 
@@ -3015,7 +3031,9 @@
             "Hey Google, turn off my car engine",
             "Hey Google, check car status",
             "Hey Google, what's my battery level",
-            "Hey Google, how much fuel do I have"
+            "Hey Google, how much fuel do I have",
+            "Hey Google, open trunk",
+            "Hey Google, close trunk"
         ];
 
         async function startDemo() {
@@ -3066,6 +3084,12 @@
                             const fuelLevel = Math.round(carDataManager.realTimeData.fuelLevel);
                             response = `Fuel level: ${fuelLevel}%`;
                             await aiVoice.speak(`FUEL RESERVES: ${fuelLevel} PERCENT.`);
+                        } else if (command.includes('open') && command.includes('trunk')) {
+                            response = `🚗 Trunk opened successfully`;
+                            await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED.");
+                        } else if (command.includes('close') && command.includes('trunk')) {
+                            response = `🚗 Trunk closed successfully`;
+                            await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
                         }
 
                         statusEl.textContent = response;
