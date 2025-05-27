@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Contact Voice - Smart Engine Control | AI Voice Assistant</title>
-    <meta name="description" content="Control your car with voice commands using AI. Start/stop engine, check status, and get real-time vehicle information through Google Assistant integration.">
+    <meta name="description" content="Control your car with voice commands using AI. Start/stop engine, check status, and get real-time vehicle information through advanced voice recognition.">
     <meta name="keywords" content="car voice control, AI assistant, vehicle automation, smart car, voice commands, car technology">
     <meta name="author" content="jsnugroho">
     <meta property="og:title" content="Car Contact Voice - AI Voice Assistant">
@@ -1550,7 +1550,7 @@
         <div class="container">
             <div class="hero-content">
                 <h1>Car Contact Voice</h1>
-                <p>Start and stop your car engine with simple voice commands through Google Assistant. The future of automotive control is here.</p>
+                <p>Start and stop your car engine with simple voice commands using advanced AI voice recognition. The future of automotive control is here.</p>
                 <a href="#demo" class="cta-button">Try Voice Demo</a>
             </div>
         </div>
@@ -1566,12 +1566,12 @@
                 <div class="feature-card">
                     <div class="feature-icon">🎤</div>
                     <h3>Voice Recognition</h3>
-                    <p>Advanced voice recognition technology powered by Google Assistant for accurate command interpretation.</p>
+                    <p>Advanced voice recognition technology powered by Web Speech API for accurate command interpretation.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🚗</div>
                     <h3>Remote Engine Control</h3>
-                    <p>Start or stop your car engine from anywhere with simple voice commands like "Hey Google, start my car".</p>
+                    <p>Start or stop your car engine from anywhere with simple voice commands like "start my car" or "turn off engine".</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
@@ -1581,7 +1581,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">📱</div>
                     <h3>Smart Integration</h3>
-                    <p>Seamlessly integrates with your smartphone and Google Assistant ecosystem for unified control.</p>
+                    <p>Seamlessly integrates with your smartphone and web browser for unified voice control experience.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
@@ -1608,13 +1608,13 @@
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>Setup Google Assistant</h3>
-                    <p>Link your device with Google Assistant through our mobile app for voice control.</p>
+                    <h3>Open Web Interface</h3>
+                    <p>Access the car voice control interface through your web browser and allow microphone permissions.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <h3>Voice Commands</h3>
-                    <p>Simply say "Hey Google, start my car" or "Hey Google, turn off my car engine".</p>
+                    <p>Simply say "start my car" or "turn off my car engine" using the voice demo feature.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
@@ -2896,14 +2896,14 @@
         // Enhanced Voice Demo with AI Voice
         let demoActive = false;
         const demoCommands = [
-            "Hey Google, start my car",
-            "Hey Google, turn off my car engine",
-            "Hey Google, check car status",
-            "Hey Google, what's my battery level",
-            "Hey Google, how much fuel do I have",
-            "Hey Google, open trunk",
-            "Hey Google, close trunk",
-            "Hey Google, active all"
+            "start my car",
+            "turn off my car engine",
+            "check car status",
+            "what's my battery level",
+            "how much fuel do I have",
+            "open trunk",
+            "close trunk",
+            "active all"
         ];
 
         async function startDemo() {
@@ -2930,7 +2930,7 @@
                     statusEl.style.color = '#34a853';
 
                     // AI acknowledges the command
-                    await aiVoice.speak("VOICE COMMAND DETECTED: " + command.replace('Hey Google, ', '').toUpperCase());
+                    await aiVoice.speak("VOICE COMMAND DETECTED: " + command.toUpperCase());
 
                     setTimeout(async () => {
                         let response;
@@ -3156,7 +3156,6 @@
         });
     </script>
 
-    <!-- Google Assistant Integration -->
-    <script src="google-assistant-bridge.js"></script>
+
 </body>
 </html>

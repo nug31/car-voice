@@ -53,16 +53,6 @@ Visit the live website: [Car Voice Assistant](https://car-voice-assistant.netlif
 3. Allow microphone permissions for voice recognition
 4. Try the voice commands!
 
-### Optional: Google Assistant Webhook
-
-For Google Assistant integration, see the `webhook/` directory:
-
-```bash
-cd webhook
-npm install
-npm run dev
-```
-
 ## 🌐 Deployment on Netlify
 
 ### Method 1: Drag & Drop (Easiest)

@@ -5,9 +5,6 @@
   # Publish directory (root directory)
   publish = "."
 
-  # Ignore webhook directory for static deployment
-  ignore = "webhook/"
-
 [build.environment]
   # Node version for any build processes
   NODE_VERSION = "18"
