@@ -1770,6 +1770,54 @@
 
             <div class="demo-status" id="demoStatus">Ready for car control commands!</div>
 
+            <!-- COMMENTED AI VOICE CONTROLS SECTION -->
+            <!-- Uncomment the section below to enable AI voice controls -->
+            <!--
+            <div style="margin: 2rem 0; text-align: center; background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px;">
+                <h3 style="color: #4285f4; margin-bottom: 1rem;">🤖 Advanced Robotic Voice Controls</h3>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="voiceSelect" style="color: white; margin-right: 1rem;">🎤 Select Robot Voice:</label>
+                    <select id="voiceSelect" onchange="changeVoice()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
+                        <option value="">Auto-Select Male Voice</option>
+                    </select>
+                    <button onclick="testVoice()" style="margin-left: 1rem; padding: 8px 16px; background: #ea4335; color: white; border: none; border-radius: 8px; cursor: pointer;">🔊 Test Voice</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <label style="color: #34a853; display: block; margin-bottom: 0.5rem;">⚡ Speech Rate: <span id="rateValue">0.6</span></label>
+                        <input type="range" id="speechRate" min="0.3" max="1.0" step="0.1" value="0.6" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="color: #fbbc05; display: block; margin-bottom: 0.5rem;">🎵 Voice Pitch: <span id="pitchValue">0.4</span></label>
+                        <input type="range" id="voicePitch" min="0.1" max="0.8" step="0.1" value="0.4" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="color: #9c27b0; display: block; margin-bottom: 0.5rem;">🔧 Glitch Level: <span id="glitchValue">15%</span></label>
+                        <input type="range" id="glitchLevel" min="0" max="30" step="5" value="15" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <label style="color: white; margin-right: 1rem;">🤖 Robotic Mode:</label>
+                    <select id="roboticMode" onchange="updateRoboticSettings()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
+                        <option value="standard">Standard Robot</option>
+                        <option value="military">Military Protocol</option>
+                        <option value="ai-core">AI Core System</option>
+                        <option value="maintenance">Maintenance Bot</option>
+                        <option value="security">Security System</option>
+                    </select>
+                    <button onclick="testRoboticMode()" style="margin-left: 1rem; padding: 8px 16px; background: #34a853; color: white; border: none; border-radius: 8px; cursor: pointer;">🎯 Test Mode</button>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0;">
+                    <button class="demo-button" onclick="startDemo()">🎤 Simulated Voice Demo</button>
+                    <button class="demo-button" onclick="startRealVoiceDemo()" style="background: linear-gradient(45deg, #34a853, #4285f4);">🗣️ Real Voice Recognition</button>
+                </div>
+            </div>
+            -->
+
             <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px; text-align: left;">
                 <h3 style="color: #4285f4; margin-bottom: 1rem;">🎯 Available Controls:</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
@@ -1806,6 +1854,55 @@
                 <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
                     💡 <strong>Tip:</strong> Use the dashboard below to monitor real-time car data and system status.
                 </p>
+
+                <!-- COMMENTED VOICE COMMANDS SECTION -->
+                <!-- Uncomment to show voice commands when AI voice is enabled -->
+                <!--
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px; text-align: left;">
+                    <h3 style="color: #4285f4; margin-bottom: 1rem;">🎯 Voice Commands You Can Try:</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <div>
+                            <h4 style="color: #34a853;">🚗 Engine Control:</h4>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>"Start my car"</li>
+                                <li>"Turn off my car"</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: #fbbc05;">📊 Status Checks:</h4>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>"Check car status"</li>
+                                <li>"What's my battery level?"</li>
+                                <li>"How much fuel do I have?"</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: #4285f4;">🎒 Trunk Control:</h4>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>"Open trunk" (buka bagasi)</li>
+                                <li>"Close trunk" (tutup bagasi)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: #9c27b0;">🚀 Active All (Auto Sequence):</h4>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>"Active all" - Runs: Engine On → Open Trunk → Close Trunk → Check Status → Engine Off</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: #ea4335;">❓ Help & Info:</h4>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>"Hello" or "Hi"</li>
+                                <li>"Help"</li>
+                                <li>"What can you do?"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+                        💡 <strong>Tip:</strong> The AI will speak back to you with detailed information about your car's status, including warnings for low battery or fuel levels.
+                    </p>
+                </div>
+                -->
             </div>
         </div>
     </section>
@@ -2382,6 +2479,849 @@
                 statusEl.style.color = '#4285f4';
             }, 1000);
         }
+
+        /* ========================================
+         * COMMENTED AI VOICE SYSTEM
+         * ========================================
+         * Uncomment the code below to enable AI voice functionality
+         * This includes speech synthesis, voice recognition, and robotic voice features
+         */
+
+        /*
+        // AI Voice System Class
+        class AIVoiceSystem {
+            constructor() {
+                this.synthesis = window.speechSynthesis;
+                this.recognition = null;
+                this.isListening = false;
+                this.voices = [];
+                this.selectedVoice = null;
+                this.isInitialized = false;
+
+                // Enhanced robotic voice characteristics
+                this.roboticSettings = {
+                    baseRate: 0.6,        // Slower, more deliberate speech
+                    basePitch: 0.4,       // Lower pitch for more robotic sound
+                    baseVolume: 1.0,      // Full volume
+                    pauseDuration: 300,   // Milliseconds between segments
+                    emphasisRate: 0.4,    // Even slower for emphasis
+                    emphasisPitch: 0.3,   // Lower pitch for emphasis
+                    glitchChance: 0.15,   // 15% chance of robotic glitches
+                    modulationDepth: 0.2  // Voice modulation intensity
+                };
+
+                // Check if speech synthesis is available
+                if (!this.synthesis) {
+                    console.warn('Speech synthesis not available in this browser');
+                    return;
+                }
+
+                this.initializeVoices();
+                this.initializeSpeechRecognition();
+            }
+
+            initializeVoices() {
+                // Load available voices
+                const loadVoices = () => {
+                    this.voices = this.synthesis.getVoices();
+
+                    // Priority list for male robotic voices
+                    const maleVoiceNames = [
+                        'microsoft david desktop',
+                        'microsoft mark desktop',
+                        'google uk english male',
+                        'alex',
+                        'daniel',
+                        'thomas',
+                        'microsoft david',
+                        'microsoft mark',
+                        'male'
+                    ];
+
+                    // First, try to find specific male voices
+                    this.selectedVoice = null;
+                    for (const maleName of maleVoiceNames) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.name.toLowerCase().includes(maleName.toLowerCase())
+                        );
+                        if (this.selectedVoice) {
+                            console.log('Found preferred male voice:', this.selectedVoice.name);
+                            break;
+                        }
+                    }
+
+                    // If no specific male voice found, look for any voice with "male" in name
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.name.toLowerCase().includes('male')
+                        );
+                    }
+
+                    // If still no male voice, exclude female voices
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.lang.startsWith('en') &&
+                            !voice.name.toLowerCase().includes('female') &&
+                            !voice.name.toLowerCase().includes('zira') &&
+                            !voice.name.toLowerCase().includes('cortana') &&
+                            !voice.name.toLowerCase().includes('samantha') &&
+                            !voice.name.toLowerCase().includes('susan') &&
+                            !voice.name.toLowerCase().includes('karen')
+                        );
+                    }
+
+                    // Fallback to any English voice
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
+                    }
+
+                    console.log('🤖 ROBOTIC VOICE SYSTEM INITIALIZED');
+                    console.log('Available voices:', this.voices.length);
+                    console.log('Selected robotic voice:', this.selectedVoice?.name);
+                    console.log('All available voices:');
+                    this.voices.forEach((voice, index) => {
+                        const isMale = voice.name.toLowerCase().includes('male') ||
+                                     voice.name.toLowerCase().includes('david') ||
+                                     voice.name.toLowerCase().includes('mark') ||
+                                     voice.name.toLowerCase().includes('alex');
+                        console.log(`  ${index}: ${voice.name} (${voice.lang}) ${isMale ? '👨 MALE' : '👩 FEMALE'}`);
+                    });
+
+                    // Force male voice characteristics if we couldn't find a true male voice
+                    if (this.selectedVoice && this.selectedVoice.name.toLowerCase().includes('female')) {
+                        console.warn('Warning: Using female voice but will apply male robotic settings');
+                    }
+
+                    this.isInitialized = true;
+
+                    // Populate voice selector
+                    setTimeout(() => {
+                        populateVoiceSelector();
+                    }, 100);
+                };
+
+                // Load voices immediately if available
+                if (this.synthesis.getVoices().length > 0) {
+                    loadVoices();
+                } else {
+                    // Wait for voices to be loaded
+                    this.synthesis.addEventListener('voiceschanged', loadVoices);
+
+                    // Fallback timeout
+                    setTimeout(() => {
+                        if (!this.isInitialized) {
+                            console.warn('Voice loading timeout, using fallback');
+                            loadVoices();
+                        }
+                    }, 3000);
+                }
+            }
+
+            initializeSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onstart = () => {
+                        console.log('Speech recognition started');
+                        this.isListening = true;
+                    };
+
+                    this.recognition.onend = () => {
+                        console.log('Speech recognition ended');
+                        this.isListening = false;
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.isListening = false;
+                    };
+                } else {
+                    console.warn('Speech recognition not supported in this browser');
+                }
+            }
+
+            speak(text, options = {}) {
+                return new Promise((resolve, reject) => {
+                    if (!this.synthesis) {
+                        console.error('Speech synthesis not available');
+                        reject('Speech synthesis not supported in this browser');
+                        return;
+                    }
+
+                    // Check if synthesis is working
+                    if (this.synthesis.speaking) {
+                        this.synthesis.cancel();
+                    }
+
+                    // Ensure we have voices loaded
+                    if (this.voices.length === 0) {
+                        this.voices = this.synthesis.getVoices();
+                    }
+
+                    // If still no voice selected, try to select one
+                    if (!this.selectedVoice && this.voices.length > 0) {
+                        this.selectBestMaleVoice();
+                    }
+
+                    // Add robotic prefixes and formatting
+                    const roboticText = this.formatRoboticText(text);
+
+                    const utterance = new SpeechSynthesisUtterance(roboticText);
+
+                    // Set voice if available
+                    if (this.selectedVoice) {
+                        utterance.voice = this.selectedVoice;
+                    }
+
+                    // Enhanced robotic voice settings with dynamic modulation
+                    const baseRate = options.rate || this.roboticSettings.baseRate;
+                    const basePitch = options.pitch || this.roboticSettings.basePitch;
+                    const baseVolume = options.volume || this.roboticSettings.baseVolume;
+
+                    // Add slight randomization for more robotic feel
+                    const rateVariation = (Math.random() - 0.5) * this.roboticSettings.modulationDepth;
+                    const pitchVariation = (Math.random() - 0.5) * this.roboticSettings.modulationDepth;
+
+                    utterance.rate = Math.max(0.1, Math.min(2.0, baseRate + rateVariation));
+                    utterance.pitch = Math.max(0.1, Math.min(2.0, basePitch + pitchVariation));
+                    utterance.volume = baseVolume;
+
+                    // Set up event handlers
+                    utterance.onend = () => {
+                        console.log('Robotic speech finished:', roboticText);
+                        resolve();
+                    };
+
+                    utterance.onerror = (event) => {
+                        console.error('Speech error:', event.error);
+                        reject(new Error(`Speech error: ${event.error}`));
+                    };
+
+                    // Add timeout as fallback
+                    const timeout = setTimeout(() => {
+                        console.warn('Speech timeout, resolving anyway');
+                        resolve();
+                    }, 10000); // 10 second timeout
+
+                    utterance.onend = () => {
+                        clearTimeout(timeout);
+                        console.log('Robotic speech finished:', roboticText);
+                        resolve();
+                    };
+
+                    console.log('Robot speaking:', roboticText);
+                    console.log('Using voice:', this.selectedVoice?.name || 'Default system voice');
+
+                    try {
+                        this.synthesis.speak(utterance);
+
+                        // Fallback check - if nothing happens after 1 second, there might be an issue
+                        setTimeout(() => {
+                            if (!this.synthesis.speaking && !this.synthesis.pending) {
+                                console.warn('Speech may have failed silently');
+                                clearTimeout(timeout);
+                                resolve(); // Resolve anyway to prevent hanging
+                            }
+                        }, 1000);
+
+                    } catch (error) {
+                        clearTimeout(timeout);
+                        console.error('Speech synthesis error:', error);
+                        reject(error);
+                    }
+                });
+            }
+            formatRoboticText(text) {
+                let roboticText = text.toUpperCase(); // All caps for robotic effect
+
+                // Advanced robotic prefixes with system codes
+                const roboticPrefixes = [
+                    '[SYS-001] AUTOMOTIVE CONTROL UNIT RESPONSE: ',
+                    '[VCU-PROC] VEHICLE COMMAND PROCESSOR: ',
+                    '[AI-CORE] ARTIFICIAL INTELLIGENCE MODULE: ',
+                    '[CAR-NET] VEHICLE NETWORK INTERFACE: ',
+                    '[ROBO-AI] ROBOTIC ASSISTANT PROTOCOL: ',
+                    '[AUTO-SYS] AUTOMATED SYSTEM NOTIFICATION: ',
+                    '[MECH-AI] MECHANICAL INTELLIGENCE UNIT: '
+                ];
+
+                // Add robotic prefix (40% chance)
+                if (Math.random() < 0.4) {
+                    const prefix = roboticPrefixes[Math.floor(Math.random() * roboticPrefixes.length)];
+                    roboticText = prefix + roboticText;
+                }
+
+                // Add robotic glitches and stutters
+                if (Math.random() < this.roboticSettings.glitchChance) {
+                    const glitches = ['*BZZT*', '*WHIRR*', '*BEEP*', '*CLICK*', '*PROCESSING*', '*ERROR-CORRECTED*'];
+                    const glitch = glitches[Math.floor(Math.random() * glitches.length)];
+                    roboticText = glitch + ' ' + roboticText;
+                }
+
+                // Enhanced robotic word transformations
+                const roboticTransforms = {
+                    'HELLO': 'HEL-LO',
+                    'BATTERY': 'BAT-TER-Y CELL',
+                    'ENGINE': 'EN-GINE UNIT',
+                    'VEHICLE': 'VEE-HI-CLE SYSTEM',
+                    'TEMPERATURE': 'THER-MAL READ-ING',
+                    'PERCENT': 'PER-CENT-AGE',
+                    'LEVEL': 'LEV-EL STATUS',
+                    'FUEL': 'FUEL RE-SERV-OIR',
+                    'SPEED': 'VE-LOC-I-TY',
+                    'MILES': 'MILE-AGE UNITS',
+                    'DEGREES': 'DE-GREE UNITS',
+                    'FAHRENHEIT': 'FAHR-EN-HEIT SCALE',
+                    'CELSIUS': 'CEL-SI-US SCALE',
+                    'RUNNING': 'OP-ER-A-TION-AL',
+                    'STOPPED': 'DE-AC-TI-VAT-ED',
+                    'STARTING': 'IN-I-TI-AT-ING',
+                    'TURNING': 'EX-E-CUT-ING',
+                    'CHECKING': 'SCAN-NING',
+                    'OPENING': 'AC-TI-VAT-ING',
+                    'CLOSING': 'DE-AC-TI-VAT-ING',
+                    'TRUNK': 'CARGO COM-PART-MENT',
+                    'CAR': 'AU-TO-MO-BILE UNIT',
+                    'SYSTEM': 'SYS-TEM',
+                    'STATUS': 'STAT-US',
+                    'COMMAND': 'COM-MAND',
+                    'COMPLETE': 'COM-PLETE',
+                    'SUCCESSFUL': 'SUC-CESS-FUL',
+                    'CRITICAL': 'CRIT-I-CAL',
+                    'WARNING': 'WARN-ING ALERT',
+                    'ALERT': 'A-LERT SIG-NAL'
+                };
+
+                // Apply robotic transformations
+                Object.keys(roboticTransforms).forEach(word => {
+                    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                    roboticText = roboticText.replace(regex, roboticTransforms[word]);
+                });
+
+                // Add enhanced pauses and robotic timing
+                roboticText = roboticText
+                    .replace(/\./g, '. <break time="500ms"/> ') // Longer pauses after periods
+                    .replace(/,/g, ', <break time="200ms"/> ') // Short pauses after commas
+                    .replace(/:/g, ': <break time="300ms"/> ') // Medium pauses after colons
+                    .replace(/;/g, '; <break time="400ms"/> ') // Pauses after semicolons
+                    .replace(/\?/g, '? <break time="600ms"/> ') // Question pauses
+                    .replace(/!/g, '! <break time="400ms"/> '); // Exclamation pauses
+
+                // Add robotic emphasis markers
+                roboticText = roboticText
+                    .replace(/\b(\d+)\b/g, '<emphasis level="strong">$1</emphasis>') // Emphasize numbers
+                    .replace(/\b(ALERT|WARNING|CRITICAL|ERROR)\b/g, '<emphasis level="strong">$1</emphasis>'); // Emphasize alerts
+
+                // Add robotic suffix occasionally
+                const roboticSuffixes = [
+                    ' <break time="300ms"/> END TRANSMISSION.',
+                    ' <break time="300ms"/> SYSTEM READY.',
+                    ' <break time="300ms"/> AWAITING NEXT COMMAND.',
+                    ' <break time="300ms"/> PROCESS COMPLETE.',
+                    ' <break time="300ms"/> STANDING BY.'
+                ];
+
+                if (Math.random() < 0.25) {
+                    const suffix = roboticSuffixes[Math.floor(Math.random() * roboticSuffixes.length)];
+                    roboticText += suffix;
+                }
+
+                return roboticText;
+            }
+
+            // Advanced robotic speech with segmented delivery
+            async speakRobotic(text, options = {}) {
+                const segments = this.segmentTextForRoboticSpeech(text);
+
+                for (let i = 0; i < segments.length; i++) {
+                    const segment = segments[i];
+                    const isEmphasis = segment.type === 'emphasis';
+                    const isPause = segment.type === 'pause';
+
+                    if (isPause) {
+                        await this.delay(segment.duration);
+                        continue;
+                    }
+
+                    const segmentOptions = {
+                        rate: isEmphasis ? this.roboticSettings.emphasisRate : options.rate,
+                        pitch: isEmphasis ? this.roboticSettings.emphasisPitch : options.pitch,
+                        volume: options.volume || this.roboticSettings.baseVolume
+                    };
+
+                    await this.speak(segment.text, segmentOptions);
+
+                    // Add micro-pause between segments for robotic effect
+                    if (i < segments.length - 1) {
+                        await this.delay(100);
+                    }
+                }
+            }
+
+            // Segment text for robotic speech delivery
+            segmentTextForRoboticSpeech(text) {
+                const segments = [];
+                const roboticText = this.formatRoboticText(text);
+
+                // Split by SSML-like break tags
+                const parts = roboticText.split(/(<break time="\d+ms"\/>)/);
+
+                for (const part of parts) {
+                    if (part.includes('<break time=')) {
+                        const match = part.match(/(\d+)ms/);
+                        if (match) {
+                            segments.push({
+                                type: 'pause',
+                                duration: parseInt(match[1])
+                            });
+                        }
+                    } else if (part.includes('<emphasis level="strong">')) {
+                        const emphasisText = part.replace(/<emphasis level="strong">|<\/emphasis>/g, '');
+                        if (emphasisText.trim()) {
+                            segments.push({
+                                type: 'emphasis',
+                                text: emphasisText.trim()
+                            });
+                        }
+                    } else if (part.trim()) {
+                        // Clean up any remaining SSML tags
+                        const cleanText = part.replace(/<[^>]*>/g, '').trim();
+                        if (cleanText) {
+                            segments.push({
+                                type: 'normal',
+                                text: cleanText
+                            });
+                        }
+                    }
+                }
+
+                return segments;
+            }
+
+            // Method to select best male voice (extracted from initializeVoices)
+            selectBestMaleVoice() {
+                if (this.voices.length === 0) {
+                    console.warn('No voices available for selection');
+                    return false;
+                }
+
+                // Priority list for male robotic voices
+                const maleVoiceNames = [
+                    'microsoft david desktop',
+                    'microsoft mark desktop',
+                    'google uk english male',
+                    'alex',
+                    'daniel',
+                    'thomas',
+                    'microsoft david',
+                    'microsoft mark',
+                    'male'
+                ];
+
+                // First, try to find specific male voices
+                this.selectedVoice = null;
+                for (const maleName of maleVoiceNames) {
+                    this.selectedVoice = this.voices.find(voice =>
+                        voice.name.toLowerCase().includes(maleName.toLowerCase())
+                    );
+                    if (this.selectedVoice) {
+                        console.log('Found preferred male voice:', this.selectedVoice.name);
+                        return true;
+                    }
+                }
+
+                // If no specific male voice found, look for any voice with "male" in name
+                if (!this.selectedVoice) {
+                    this.selectedVoice = this.voices.find(voice =>
+                        voice.name.toLowerCase().includes('male')
+                    );
+                }
+
+                // If still no male voice, exclude female voices
+                if (!this.selectedVoice) {
+                    this.selectedVoice = this.voices.find(voice =>
+                        voice.lang.startsWith('en') &&
+                        !voice.name.toLowerCase().includes('female') &&
+                        !voice.name.toLowerCase().includes('zira') &&
+                        !voice.name.toLowerCase().includes('cortana') &&
+                        !voice.name.toLowerCase().includes('samantha') &&
+                        !voice.name.toLowerCase().includes('susan') &&
+                        !voice.name.toLowerCase().includes('karen')
+                    );
+                }
+
+                // Fallback to any English voice
+                if (!this.selectedVoice) {
+                    this.selectedVoice = this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
+                }
+
+                console.log('Selected voice:', this.selectedVoice?.name);
+                return !!this.selectedVoice;
+            }
+
+            // Method to manually set voice (for debugging/testing)
+            setVoice(voiceName) {
+                const voice = this.voices.find(v =>
+                    v.name.toLowerCase().includes(voiceName.toLowerCase())
+                );
+                if (voice) {
+                    this.selectedVoice = voice;
+                    console.log('Voice manually set to:', voice.name);
+                    return true;
+                }
+                console.log('Voice not found:', voiceName);
+                return false;
+            }
+
+            // Method to list all available voices
+            listVoices() {
+                console.log('Available voices:');
+                this.voices.forEach((voice, index) => {
+                    console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.gender || 'unknown gender'}`);
+                });
+                return this.voices;
+            }
+
+            listen() {
+                return new Promise((resolve, reject) => {
+                    if (!this.recognition) {
+                        reject('Speech recognition not supported');
+                        return;
+                    }
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        console.log('Heard:', transcript);
+                        resolve(transcript);
+                    };
+
+                    this.recognition.start();
+                });
+            }
+
+            async getCarStatusSpeech() {
+                const data = carDataManager.realTimeData;
+                const isConnected = carDataManager.isConnected();
+
+                let statusText = '';
+
+                if (isConnected) {
+                    statusText = `VEHICLE STATUS REPORT INITIATED. `;
+
+                    if (data.engineRunning) {
+                        statusText += `ENGINE STATUS: OPERATIONAL. CURRENT RPM: ${Math.round(data.engineRPM)}. `;
+                        statusText += `VEHICLE VELOCITY: ${Math.round(data.vehicleSpeed)} MILES PER HOUR. `;
+                    } else {
+                        statusText += `ENGINE STATUS: OFFLINE. `;
+                    }
+
+                    statusText += `BATTERY CHARGE LEVEL: ${Math.round(data.batteryLevel)} PERCENT. `;
+                    statusText += `FUEL RESERVES: ${Math.round(data.fuelLevel)} PERCENT. `;
+                    statusText += `ENGINE THERMAL READING: ${Math.round(data.engineTemp)} DEGREES FAHRENHEIT. `;
+                    statusText += `ODOMETER READING: ${data.mileage.toLocaleString()} MILES.`;
+
+                    // Add robotic warnings if needed
+                    if (data.batteryLevel < 20) {
+                        statusText += ` ALERT: BATTERY CHARGE CRITICALLY LOW. IMMEDIATE ATTENTION REQUIRED.`;
+                    }
+                    if (data.fuelLevel < 15) {
+                        statusText += ` ALERT: FUEL RESERVES CRITICALLY LOW. REFUELING RECOMMENDED.`;
+                    }
+                    if (data.engineTemp > 210) {
+                        statusText += ` WARNING: ENGINE THERMAL LEVELS ELEVATED. COOLING SYSTEM CHECK ADVISED.`;
+                    }
+
+                    statusText += ` VEHICLE STATUS REPORT COMPLETE.`;
+                } else {
+                    statusText = `SYSTEM OPERATING IN DEMONSTRATION MODE. REAL VEHICLE CONNECTION NOT DETECTED. DISPLAYING SIMULATED DATA: BATTERY CHARGE ${Math.round(data.batteryLevel)} PERCENT. FUEL RESERVES ${Math.round(data.fuelLevel)} PERCENT. ENGINE THERMAL READING ${Math.round(data.engineTemp)} DEGREES. CONNECT VEHICLE FOR LIVE DATA TRANSMISSION.`;
+                }
+
+                return statusText;
+            }
+
+            processVoiceCommand(command) {
+                const lowerCommand = command.toLowerCase();
+
+                if (lowerCommand.includes('start') && (lowerCommand.includes('car') || lowerCommand.includes('engine'))) {
+                    const response = carDataManager.startEngine();
+                    return "COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE. ENGINE ACTIVATION COMPLETE.";
+                }
+
+                if ((lowerCommand.includes('stop') || lowerCommand.includes('turn off')) &&
+                    (lowerCommand.includes('car') || lowerCommand.includes('engine'))) {
+                    const response = carDataManager.stopEngine();
+                    return "COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE. ENGINE DEACTIVATION COMPLETE.";
+                }
+
+                // Trunk control commands (buka bagasi / tutup bagasi)
+                if (lowerCommand.includes('open') && lowerCommand.includes('trunk')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED. TRUNK IS NOW OPEN.";
+                }
+
+                if (lowerCommand.includes('close') && lowerCommand.includes('trunk')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED. TRUNK IS NOW CLOSED.";
+                }
+
+                // Indonesian commands
+                if (lowerCommand.includes('buka bagasi')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED. INDONESIAN COMMAND RECOGNIZED: BUKA BAGASI.";
+                }
+
+                if (lowerCommand.includes('tutup bagasi')) {
+                    return "COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED. INDONESIAN COMMAND RECOGNIZED: TUTUP BAGASI.";
+                }
+
+                if (lowerCommand.includes('status') || lowerCommand.includes('check')) {
+                    return this.getCarStatusSpeech();
+                }
+
+                if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
+                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, AUTOMATED COMMAND SEQUENCES, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
+                }
+
+                if (lowerCommand.includes('help')) {
+                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, ACTIVE ALL AUTOMATED SEQUENCE, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. INDONESIAN COMMANDS: BUKA BAGASI, TUTUP BAGASI. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
+                }
+
+                if (lowerCommand.includes('battery')) {
+                    const batteryLevel = Math.round(carDataManager.realTimeData.batteryLevel);
+                    return `BATTERY CHARGE LEVEL: ${batteryLevel} PERCENT. ${batteryLevel < 20 ? 'CHARGE LEVEL CRITICALLY LOW.' : 'CHARGE LEVEL ACCEPTABLE.'}`;
+                }
+
+                if (lowerCommand.includes('fuel')) {
+                    const fuelLevel = Math.round(carDataManager.realTimeData.fuelLevel);
+                    return `FUEL RESERVES: ${fuelLevel} PERCENT. ${fuelLevel < 15 ? 'FUEL LEVEL CRITICALLY LOW. REFUELING RECOMMENDED.' : 'FUEL LEVEL ACCEPTABLE.'}`;
+                }
+
+                // Active all command - runs the automated sequence
+                if (lowerCommand.includes('active') && lowerCommand.includes('all')) {
+                    // Start the automated sequence (it will speak all steps)
+                    this.activateAllFeatures();
+                    return "INITIATING AUTOMATED SEQUENCE.";
+                }
+
+                // Default response
+                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, OPEN TRUNK, CLOSE TRUNK, ACTIVE ALL, CHECK STATUS.";
+            }
+
+            async activateAllFeatures() {
+                // Execute sequence: engine on, open trunk, close trunk, check status, engine off
+
+                // Initial announcement
+                await this.speak("SEQUENCE STARTING.");
+                await this.delay(1000);
+
+                // 1. Start Engine
+                carDataManager.startEngine();
+                await this.speak("ENGINE ON.");
+                await this.delay(1500);
+
+                // 2. Open Trunk (buka bagasi)
+                await this.speak("TRUNK OPEN.");
+                await this.delay(1500);
+
+                // 3. Close Trunk (tutup bagasi)
+                await this.speak("TRUNK CLOSED.");
+                await this.delay(1500);
+
+                // 4. Check Car Status - Full detailed status report
+                const statusText = await this.getCarStatusSpeech();
+                await this.speak(statusText);
+                await this.delay(2000);
+
+                // 5. Turn Off Engine
+                carDataManager.stopEngine();
+                await this.speak("ENGINE OFF. SEQUENCE COMPLETE.");
+
+                return "AUTOMATED SEQUENCE EXECUTED SUCCESSFULLY.";
+            }
+
+            // Helper method for delays
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize AI Voice System (commented out)
+        // const aiVoice = new AIVoiceSystem();
+
+        // Voice Control Functions (commented out)
+        function populateVoiceSelector() {
+            // Uncomment to enable voice selector population
+            /*
+            const voiceSelect = document.getElementById('voiceSelect');
+            if (!voiceSelect || !aiVoice.voices) return;
+
+            // Clear existing options except the first one
+            voiceSelect.innerHTML = '<option value="">Auto-Select Male Voice</option>';
+
+            // Add all available voices
+            aiVoice.voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                // Mark male voices
+                if (voice.name.toLowerCase().includes('male') ||
+                    voice.name.toLowerCase().includes('david') ||
+                    voice.name.toLowerCase().includes('mark') ||
+                    voice.name.toLowerCase().includes('alex')) {
+                    option.textContent += ' 👨 MALE';
+                }
+
+                voiceSelect.appendChild(option);
+            });
+
+            // Set current selected voice
+            if (aiVoice.selectedVoice) {
+                voiceSelect.value = aiVoice.selectedVoice.name;
+            }
+            */
+        }
+
+        function changeVoice() {
+            // Uncomment to enable voice changing
+            /*
+            const voiceSelect = document.getElementById('voiceSelect');
+            const selectedVoiceName = voiceSelect.value;
+
+            if (selectedVoiceName) {
+                aiVoice.setVoice(selectedVoiceName);
+            } else {
+                // Re-initialize to auto-select male voice
+                aiVoice.initializeVoices();
+            }
+            */
+        }
+
+        function testVoice() {
+            // Uncomment to enable voice testing
+            /*
+            try {
+                // Check if speech synthesis is supported
+                if (!('speechSynthesis' in window)) {
+                    alert('Speech synthesis not supported in this browser. Please try Chrome, Edge, or Safari.');
+                    return;
+                }
+
+                // Test with enhanced robotic speech
+                aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+
+            } catch (error) {
+                console.error('Voice test error:', error);
+                alert('Voice test failed. Please check browser compatibility.');
+            }
+            */
+        }
+
+        function updateRoboticSettings() {
+            // Uncomment to enable robotic settings updates
+            /*
+            const speechRate = document.getElementById('speechRate').value;
+            const voicePitch = document.getElementById('voicePitch').value;
+            const glitchLevel = document.getElementById('glitchLevel').value;
+            const roboticMode = document.getElementById('roboticMode').value;
+
+            // Update display values
+            document.getElementById('rateValue').textContent = speechRate;
+            document.getElementById('pitchValue').textContent = voicePitch;
+            document.getElementById('glitchValue').textContent = glitchLevel + '%';
+
+            // Update AI voice settings
+            aiVoice.roboticSettings.baseRate = parseFloat(speechRate);
+            aiVoice.roboticSettings.basePitch = parseFloat(voicePitch);
+            aiVoice.roboticSettings.glitchChance = parseFloat(glitchLevel) / 100;
+
+            // Apply mode-specific settings
+            applyRoboticMode(roboticMode);
+
+            console.log('🤖 Robotic settings updated:', {
+                rate: speechRate,
+                pitch: voicePitch,
+                glitch: glitchLevel + '%',
+                mode: roboticMode
+            });
+            */
+        }
+
+        function applyRoboticMode(mode) {
+            // Uncomment to enable robotic mode application
+            /*
+            switch(mode) {
+                case 'military':
+                    aiVoice.roboticSettings.emphasisRate = 0.5;
+                    aiVoice.roboticSettings.emphasisPitch = 0.3;
+                    aiVoice.roboticSettings.pauseDuration = 400;
+                    break;
+                case 'ai-core':
+                    aiVoice.roboticSettings.emphasisRate = 0.3;
+                    aiVoice.roboticSettings.emphasisPitch = 0.2;
+                    aiVoice.roboticSettings.pauseDuration = 500;
+                    break;
+                case 'maintenance':
+                    aiVoice.roboticSettings.emphasisRate = 0.7;
+                    aiVoice.roboticSettings.emphasisPitch = 0.5;
+                    aiVoice.roboticSettings.pauseDuration = 200;
+                    break;
+                case 'security':
+                    aiVoice.roboticSettings.emphasisRate = 0.4;
+                    aiVoice.roboticSettings.emphasisPitch = 0.2;
+                    aiVoice.roboticSettings.pauseDuration = 350;
+                    break;
+                default: // standard
+                    aiVoice.roboticSettings.emphasisRate = 0.4;
+                    aiVoice.roboticSettings.emphasisPitch = 0.3;
+                    aiVoice.roboticSettings.pauseDuration = 300;
+            }
+            */
+        }
+
+        function testRoboticMode() {
+            // Uncomment to enable robotic mode testing
+            /*
+            const mode = document.getElementById('roboticMode').value;
+            const testMessages = {
+                'standard': 'Standard robotic protocol activated. All systems operational.',
+                'military': 'Military protocol engaged. Awaiting orders, commander.',
+                'ai-core': 'AI core system online. Processing advanced algorithms.',
+                'maintenance': 'Maintenance bot ready. Diagnostic systems active.',
+                'security': 'Security system armed. Perimeter monitoring enabled.'
+            };
+
+            try {
+                aiVoice.speakRobotic(testMessages[mode] || testMessages.standard);
+            } catch (error) {
+                console.error('Mode test error:', error);
+                aiVoice.speak(testMessages[mode] || testMessages.standard);
+            }
+            */
+        }
+
+        // Voice Demo Functions (commented out)
+        function startDemo() {
+            // Uncomment to enable simulated voice demo
+            /*
+            const statusEl = document.getElementById('demoStatus');
+            statusEl.textContent = 'Voice demo is currently disabled. Uncomment AI voice code to enable.';
+            statusEl.style.color = '#fbbc05';
+            */
+        }
+
+        function startRealVoiceDemo() {
+            // Uncomment to enable real voice demo
+            /*
+            const statusEl = document.getElementById('demoStatus');
+            statusEl.textContent = 'Real voice demo is currently disabled. Uncomment AI voice code to enable.';
+            statusEl.style.color = '#fbbc05';
+            */
+        }
+
+        // END OF COMMENTED AI VOICE SYSTEM
+        */
 
 
 
