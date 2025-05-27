@@ -1,0 +1,44 @@
+{
+  "name": "car-voice-assistant",
+  "version": "1.0.0",
+  "description": "AI-powered car voice control system with real-time dashboard and voice commands",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000",
+    "dev": "npx live-server .",
+    "build": "echo 'No build process needed for static site'",
+    "deploy": "echo 'Deploy to Netlify via GitHub integration'"
+  },
+  "keywords": [
+    "car",
+    "voice-control",
+    "ai-assistant",
+    "automotive",
+    "speech-recognition",
+    "vehicle-automation",
+    "smart-car",
+    "obd2",
+    "car-dashboard"
+  ],
+  "author": {
+    "name": "jsnugroho",
+    "email": "contact@jsnugroho.dev",
+    "url": "https://jsnugroho.dev"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsnugroho/car-voice-assistant.git"
+  },
+  "homepage": "https://car-voice-assistant.netlify.app",
+  "bugs": {
+    "url": "https://github.com/jsnugroho/car-voice-assistant/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}
