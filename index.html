@@ -2369,6 +2369,14 @@
                 this.isListening = false;
                 this.voices = [];
                 this.selectedVoice = null;
+                this.isInitialized = false;
+
+                // Check if speech synthesis is available
+                if (!this.synthesis) {
+                    console.warn('Speech synthesis not available in this browser');
+                    return;
+                }
+
                 this.initializeVoices();
                 this.initializeSpeechRecognition();
             }
@@ -2482,8 +2490,14 @@
             speak(text, options = {}) {
                 return new Promise((resolve, reject) => {
                     if (!this.synthesis) {
-                        reject('Speech synthesis not supported');
+                        console.error('Speech synthesis not available');
+                        reject('Speech synthesis not supported in this browser');
                         return;
+                    }
+
+                    // Check if synthesis is working
+                    if (this.synthesis.speaking) {
+                        this.synthesis.cancel();
                     }
 
                     // Ensure we have voices loaded
@@ -2496,9 +2510,6 @@
                         this.selectBestMaleVoice();
                     }
 
-                    // Cancel any ongoing speech
-                    this.synthesis.cancel();
-
                     // Add robotic prefixes and formatting
                     const roboticText = this.formatRoboticText(text);
 
@@ -2510,10 +2521,11 @@
                     }
 
                     // Enhanced robotic voice settings for masculine effect
-                    utterance.rate = options.rate || 0.7; // Even slower for more robotic effect
-                    utterance.pitch = options.pitch || 0.6; // Much lower pitch for masculine robotic voice
-                    utterance.volume = options.volume || 1.0; // Full volume for authority
+                    utterance.rate = options.rate || 0.7;
+                    utterance.pitch = options.pitch || 0.6;
+                    utterance.volume = options.volume || 1.0;
 
+                    // Set up event handlers
                     utterance.onend = () => {
                         console.log('Robotic speech finished:', roboticText);
                         resolve();
@@ -2521,7 +2533,19 @@
 
                     utterance.onerror = (event) => {
                         console.error('Speech error:', event.error);
-                        reject(event.error);
+                        reject(new Error(`Speech error: ${event.error}`));
+                    };
+
+                    // Add timeout as fallback
+                    const timeout = setTimeout(() => {
+                        console.warn('Speech timeout, resolving anyway');
+                        resolve();
+                    }, 10000); // 10 second timeout
+
+                    utterance.onend = () => {
+                        clearTimeout(timeout);
+                        console.log('Robotic speech finished:', roboticText);
+                        resolve();
                     };
 
                     console.log('Robot speaking:', roboticText);
@@ -2529,7 +2553,18 @@
 
                     try {
                         this.synthesis.speak(utterance);
+
+                        // Fallback check - if nothing happens after 1 second, there might be an issue
+                        setTimeout(() => {
+                            if (!this.synthesis.speaking && !this.synthesis.pending) {
+                                console.warn('Speech may have failed silently');
+                                clearTimeout(timeout);
+                                resolve(); // Resolve anyway to prevent hanging
+                            }
+                        }, 1000);
+
                     } catch (error) {
+                        clearTimeout(timeout);
                         console.error('Speech synthesis error:', error);
                         reject(error);
                     }
@@ -2854,6 +2889,15 @@
         // Test voice function
         async function testVoice() {
             try {
+                // Check if speech synthesis is supported
+                if (!('speechSynthesis' in window)) {
+                    alert('Speech synthesis not supported in this browser. Please try Chrome, Edge, or Safari.');
+                    return;
+                }
+
+                // Wait for voices to be loaded
+                await waitForVoices();
+
                 // Ensure voices are loaded
                 await aiVoice.initializeVoices();
 
@@ -2862,21 +2906,122 @@
                     aiVoice.selectBestMaleVoice();
                 }
 
-                // Test the voice with a simple message first
-                await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                // Test with a simple utterance first
+                const testUtterance = new SpeechSynthesisUtterance("Hello");
+                testUtterance.volume = 0.1; // Very quiet test
+
+                // Test if speech synthesis works
+                speechSynthesis.speak(testUtterance);
+
+                // Wait a moment then speak the actual message
+                setTimeout(async () => {
+                    try {
+                        await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                    } catch (speakError) {
+                        console.error('Speak error:', speakError);
+                        // Try with basic utterance
+                        const basicUtterance = new SpeechSynthesisUtterance("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                        basicUtterance.rate = 0.8;
+                        basicUtterance.pitch = 0.7;
+                        speechSynthesis.speak(basicUtterance);
+                    }
+                }, 500);
 
             } catch (error) {
                 console.error('Voice test error:', error);
-
-                // Try fallback with default voice
-                try {
-                    aiVoice.selectedVoice = null; // Reset to use default
-                    await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
-                } catch (fallbackError) {
-                    console.error('Fallback voice test failed:', fallbackError);
-                    alert('Voice system not available. Please check your browser settings and ensure text-to-speech is enabled.');
-                }
+                showVoiceErrorDialog();
             }
+        }
+
+        // Show detailed voice error dialog
+        function showVoiceErrorDialog() {
+            const userAgent = navigator.userAgent;
+            let browserName = 'Unknown';
+            let recommendations = '';
+
+            if (userAgent.includes('Chrome')) {
+                browserName = 'Chrome';
+                recommendations = `
+                    <strong>Chrome Solutions:</strong><br>
+                    1. Check if site is served over HTTPS<br>
+                    2. Go to chrome://settings/content/sound<br>
+                    3. Ensure "Sites can play sound" is enabled<br>
+                    4. Try refreshing the page
+                `;
+            } else if (userAgent.includes('Firefox')) {
+                browserName = 'Firefox';
+                recommendations = `
+                    <strong>Firefox Note:</strong><br>
+                    Firefox has limited speech synthesis support.<br>
+                    <strong>Recommended:</strong> Try Chrome, Edge, or Safari for best experience.
+                `;
+            } else if (userAgent.includes('Safari')) {
+                browserName = 'Safari';
+                recommendations = `
+                    <strong>Safari Solutions:</strong><br>
+                    1. Ensure you're on macOS 10.14+ or iOS 12+<br>
+                    2. Check System Preferences > Accessibility > Speech<br>
+                    3. Try refreshing the page
+                `;
+            } else if (userAgent.includes('Edge')) {
+                browserName = 'Edge';
+                recommendations = `
+                    <strong>Edge Solutions:</strong><br>
+                    1. Check Windows Speech settings<br>
+                    2. Ensure site has microphone permissions<br>
+                    3. Try refreshing the page
+                `;
+            }
+
+            const message = `
+                <div style="text-align: left; font-family: Arial, sans-serif;">
+                    <h3>🎤 Voice System Not Available</h3>
+                    <p><strong>Browser:</strong> ${browserName}</p>
+                    <p><strong>Issue:</strong> Text-to-speech functionality is not working.</p>
+
+                    <div style="margin: 15px 0; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                        ${recommendations}
+                    </div>
+
+                    <p><strong>Alternative:</strong> You can still use the car dashboard and controls manually.</p>
+
+                    <p style="font-size: 12px; color: #666;">
+                        <strong>Best browsers for voice features:</strong> Chrome, Edge, Safari<br>
+                        <strong>Note:</strong> Voice features require HTTPS and microphone permissions.
+                    </p>
+                </div>
+            `;
+
+            // Create custom dialog
+            const dialog = document.createElement('div');
+            dialog.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: 20px;">
+                        ${message}
+                        <button onclick="this.closest('div').remove()" style="margin-top: 15px; padding: 10px 20px; background: #4285f4; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            OK, I Understand
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(dialog);
+        }
+
+        // Helper function to wait for voices to load
+        function waitForVoices() {
+            return new Promise((resolve) => {
+                const voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    resolve(voices);
+                } else {
+                    speechSynthesis.onvoiceschanged = () => {
+                        resolve(speechSynthesis.getVoices());
+                    };
+                    // Fallback timeout
+                    setTimeout(() => resolve(speechSynthesis.getVoices()), 1000);
+                }
+            });
         }
 
         // Load voices when page loads
