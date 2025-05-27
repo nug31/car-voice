@@ -2042,6 +2042,15 @@
             <h2 class="section-title">🤖 Robotic AI Voice Demo</h2>
             <p>Experience our robotic AI voice assistant with male robotic voice that can speak and understand your commands</p>
 
+            <!-- Voice Selection -->
+            <div style="margin: 1rem 0; text-align: center;">
+                <label for="voiceSelect" style="color: white; margin-right: 1rem;">🤖 Select Robot Voice:</label>
+                <select id="voiceSelect" onchange="changeVoice()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
+                    <option value="">Auto-Select Male Voice</option>
+                </select>
+                <button onclick="testVoice()" style="margin-left: 1rem; padding: 8px 16px; background: #ea4335; color: white; border: none; border-radius: 8px; cursor: pointer;">🔊 Test Voice</button>
+            </div>
+
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0;">
                 <button class="demo-button" onclick="startDemo()">🎤 Simulated Voice Demo</button>
                 <button class="demo-button" onclick="startRealVoiceDemo()" style="background: linear-gradient(45deg, #34a853, #4285f4);">🗣️ Real Voice Recognition</button>
@@ -2636,22 +2645,73 @@
                 // Load available voices
                 const loadVoices = () => {
                     this.voices = this.synthesis.getVoices();
-                    // Prefer male robotic voices for AI assistant
-                    this.selectedVoice = this.voices.find(voice =>
-                        voice.name.toLowerCase().includes('male') ||
-                        voice.name.toLowerCase().includes('david') ||
-                        voice.name.toLowerCase().includes('mark') ||
-                        voice.name.toLowerCase().includes('microsoft mark') ||
-                        voice.name.toLowerCase().includes('google uk english male') ||
-                        voice.name.toLowerCase().includes('alex')
-                    ) || this.voices.find(voice =>
-                        voice.lang.startsWith('en') &&
-                        (voice.name.toLowerCase().includes('male') || !voice.name.toLowerCase().includes('female'))
-                    ) || this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
 
+                    // Priority list for male robotic voices
+                    const maleVoiceNames = [
+                        'microsoft david desktop',
+                        'microsoft mark desktop',
+                        'google uk english male',
+                        'alex',
+                        'daniel',
+                        'thomas',
+                        'microsoft david',
+                        'microsoft mark',
+                        'male'
+                    ];
+
+                    // First, try to find specific male voices
+                    this.selectedVoice = null;
+                    for (const maleName of maleVoiceNames) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.name.toLowerCase().includes(maleName.toLowerCase())
+                        );
+                        if (this.selectedVoice) {
+                            console.log('Found preferred male voice:', this.selectedVoice.name);
+                            break;
+                        }
+                    }
+
+                    // If no specific male voice found, look for any voice with "male" in name
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.name.toLowerCase().includes('male')
+                        );
+                    }
+
+                    // If still no male voice, exclude female voices
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice =>
+                            voice.lang.startsWith('en') &&
+                            !voice.name.toLowerCase().includes('female') &&
+                            !voice.name.toLowerCase().includes('zira') &&
+                            !voice.name.toLowerCase().includes('cortana') &&
+                            !voice.name.toLowerCase().includes('samantha') &&
+                            !voice.name.toLowerCase().includes('susan') &&
+                            !voice.name.toLowerCase().includes('karen')
+                        );
+                    }
+
+                    // Fallback to any English voice
+                    if (!this.selectedVoice) {
+                        this.selectedVoice = this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
+                    }
+
+                    console.log('🤖 ROBOTIC VOICE SYSTEM INITIALIZED');
                     console.log('Available voices:', this.voices.length);
                     console.log('Selected robotic voice:', this.selectedVoice?.name);
-                    console.log('All available voices:', this.voices.map(v => v.name));
+                    console.log('All available voices:');
+                    this.voices.forEach((voice, index) => {
+                        const isMale = voice.name.toLowerCase().includes('male') ||
+                                     voice.name.toLowerCase().includes('david') ||
+                                     voice.name.toLowerCase().includes('mark') ||
+                                     voice.name.toLowerCase().includes('alex');
+                        console.log(`  ${index}: ${voice.name} (${voice.lang}) ${isMale ? '👨 MALE' : '👩 FEMALE'}`);
+                    });
+
+                    // Force male voice characteristics if we couldn't find a true male voice
+                    if (this.selectedVoice && this.selectedVoice.name.toLowerCase().includes('female')) {
+                        console.warn('Warning: Using female voice but will apply male robotic settings');
+                    }
                 };
 
                 loadVoices();
@@ -2703,10 +2763,10 @@
                     const utterance = new SpeechSynthesisUtterance(roboticText);
                     utterance.voice = this.selectedVoice;
 
-                    // Robotic voice settings
-                    utterance.rate = options.rate || 0.75; // Slower, more robotic
-                    utterance.pitch = options.pitch || 0.8; // Lower pitch for robotic effect
-                    utterance.volume = options.volume || 0.9; // Slightly louder
+                    // Enhanced robotic voice settings for masculine effect
+                    utterance.rate = options.rate || 0.7; // Even slower for more robotic effect
+                    utterance.pitch = options.pitch || 0.6; // Much lower pitch for masculine robotic voice
+                    utterance.volume = options.volume || 1.0; // Full volume for authority
 
                     utterance.onend = () => {
                         console.log('Robotic speech finished:', roboticText);
@@ -2754,6 +2814,29 @@
                     .replace(/temperature/gi, 'TEM-PER-A-TURE');
 
                 return roboticText;
+            }
+
+            // Method to manually set voice (for debugging/testing)
+            setVoice(voiceName) {
+                const voice = this.voices.find(v =>
+                    v.name.toLowerCase().includes(voiceName.toLowerCase())
+                );
+                if (voice) {
+                    this.selectedVoice = voice;
+                    console.log('Voice manually set to:', voice.name);
+                    return true;
+                }
+                console.log('Voice not found:', voiceName);
+                return false;
+            }
+
+            // Method to list all available voices
+            listVoices() {
+                console.log('Available voices:');
+                this.voices.forEach((voice, index) => {
+                    console.log(`${index}: ${voice.name} (${voice.lang}) - ${voice.gender || 'unknown gender'}`);
+                });
+                return this.voices;
             }
 
             listen() {
@@ -2856,6 +2939,74 @@
 
         // Initialize AI Voice System
         const aiVoice = new AIVoiceSystem();
+
+        // Populate voice selector when voices are loaded
+        function populateVoiceSelector() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            if (!voiceSelect || !aiVoice.voices) return;
+
+            // Clear existing options except the first one
+            voiceSelect.innerHTML = '<option value="">Auto-Select Male Voice</option>';
+
+            // Add all available voices
+            aiVoice.voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                // Mark male voices
+                if (voice.name.toLowerCase().includes('male') ||
+                    voice.name.toLowerCase().includes('david') ||
+                    voice.name.toLowerCase().includes('mark') ||
+                    voice.name.toLowerCase().includes('alex')) {
+                    option.textContent += ' 👨 MALE';
+                }
+
+                voiceSelect.appendChild(option);
+            });
+
+            // Set current selected voice
+            if (aiVoice.selectedVoice) {
+                voiceSelect.value = aiVoice.selectedVoice.name;
+            }
+        }
+
+        // Change voice function
+        function changeVoice() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            const selectedVoiceName = voiceSelect.value;
+
+            if (selectedVoiceName) {
+                aiVoice.setVoice(selectedVoiceName);
+            } else {
+                // Re-initialize to auto-select male voice
+                aiVoice.initializeVoices();
+            }
+        }
+
+        // Test voice function
+        async function testVoice() {
+            try {
+                await aiVoice.speak("ROBOTIC VOICE TEST INITIATED. THIS IS YOUR AUTOMOTIVE AI ASSISTANT SPEAKING.");
+            } catch (error) {
+                console.error('Voice test error:', error);
+                alert('Voice test failed. Please try a different voice.');
+            }
+        }
+
+        // Load voices when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                populateVoiceSelector();
+            }, 1000);
+        });
+
+        // Also populate when voices change
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                setTimeout(populateVoiceSelector, 100);
+            };
+        }
 
         // Enhanced Voice Demo with AI Voice
         let demoActive = false;
