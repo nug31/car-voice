@@ -1762,13 +1762,47 @@
             <h2 class="section-title">🤖 Robotic AI Voice Demo</h2>
             <p>Experience our robotic AI voice assistant with male robotic voice that can speak and understand your commands</p>
 
-            <!-- Voice Selection -->
-            <div style="margin: 1rem 0; text-align: center;">
-                <label for="voiceSelect" style="color: white; margin-right: 1rem;">🤖 Select Robot Voice:</label>
-                <select id="voiceSelect" onchange="changeVoice()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
-                    <option value="">Auto-Select Male Voice</option>
-                </select>
-                <button onclick="testVoice()" style="margin-left: 1rem; padding: 8px 16px; background: #ea4335; color: white; border: none; border-radius: 8px; cursor: pointer;">🔊 Test Voice</button>
+            <!-- Enhanced Voice Selection and Robotic Controls -->
+            <div style="margin: 2rem 0; text-align: center; background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px;">
+                <h3 style="color: #4285f4; margin-bottom: 1rem;">🤖 Advanced Robotic Voice Controls</h3>
+
+                <!-- Voice Selection -->
+                <div style="margin-bottom: 1rem;">
+                    <label for="voiceSelect" style="color: white; margin-right: 1rem;">🎤 Select Robot Voice:</label>
+                    <select id="voiceSelect" onchange="changeVoice()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
+                        <option value="">Auto-Select Male Voice</option>
+                    </select>
+                    <button onclick="testVoice()" style="margin-left: 1rem; padding: 8px 16px; background: #ea4335; color: white; border: none; border-radius: 8px; cursor: pointer;">🔊 Test Voice</button>
+                </div>
+
+                <!-- Robotic Characteristics Controls -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <label style="color: #34a853; display: block; margin-bottom: 0.5rem;">⚡ Speech Rate: <span id="rateValue">0.6</span></label>
+                        <input type="range" id="speechRate" min="0.3" max="1.0" step="0.1" value="0.6" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="color: #fbbc05; display: block; margin-bottom: 0.5rem;">🎵 Voice Pitch: <span id="pitchValue">0.4</span></label>
+                        <input type="range" id="voicePitch" min="0.1" max="0.8" step="0.1" value="0.4" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="color: #9c27b0; display: block; margin-bottom: 0.5rem;">🔧 Glitch Level: <span id="glitchValue">15%</span></label>
+                        <input type="range" id="glitchLevel" min="0" max="30" step="5" value="15" onchange="updateRoboticSettings()" style="width: 100%;">
+                    </div>
+                </div>
+
+                <!-- Robotic Mode Selection -->
+                <div style="margin-top: 1rem;">
+                    <label style="color: white; margin-right: 1rem;">🤖 Robotic Mode:</label>
+                    <select id="roboticMode" onchange="updateRoboticSettings()" style="padding: 8px; border-radius: 8px; background: #1a1a2e; color: white; border: 1px solid #4285f4;">
+                        <option value="standard">Standard Robot</option>
+                        <option value="military">Military Protocol</option>
+                        <option value="ai-core">AI Core System</option>
+                        <option value="maintenance">Maintenance Bot</option>
+                        <option value="security">Security System</option>
+                    </select>
+                    <button onclick="testRoboticMode()" style="margin-left: 1rem; padding: 8px 16px; background: #34a853; color: white; border: none; border-radius: 8px; cursor: pointer;">🎯 Test Mode</button>
+                </div>
             </div>
 
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0;">
@@ -2371,6 +2405,18 @@
                 this.selectedVoice = null;
                 this.isInitialized = false;
 
+                // Enhanced robotic voice characteristics
+                this.roboticSettings = {
+                    baseRate: 0.6,        // Slower, more deliberate speech
+                    basePitch: 0.4,       // Lower pitch for more robotic sound
+                    baseVolume: 1.0,      // Full volume
+                    pauseDuration: 300,   // Milliseconds between segments
+                    emphasisRate: 0.4,    // Even slower for emphasis
+                    emphasisPitch: 0.3,   // Lower pitch for emphasis
+                    glitchChance: 0.15,   // 15% chance of robotic glitches
+                    modulationDepth: 0.2  // Voice modulation intensity
+                };
+
                 // Check if speech synthesis is available
                 if (!this.synthesis) {
                     console.warn('Speech synthesis not available in this browser');
@@ -2520,10 +2566,18 @@
                         utterance.voice = this.selectedVoice;
                     }
 
-                    // Enhanced robotic voice settings for masculine effect
-                    utterance.rate = options.rate || 0.7;
-                    utterance.pitch = options.pitch || 0.6;
-                    utterance.volume = options.volume || 1.0;
+                    // Enhanced robotic voice settings with dynamic modulation
+                    const baseRate = options.rate || this.roboticSettings.baseRate;
+                    const basePitch = options.pitch || this.roboticSettings.basePitch;
+                    const baseVolume = options.volume || this.roboticSettings.baseVolume;
+
+                    // Add slight randomization for more robotic feel
+                    const rateVariation = (Math.random() - 0.5) * this.roboticSettings.modulationDepth;
+                    const pitchVariation = (Math.random() - 0.5) * this.roboticSettings.modulationDepth;
+
+                    utterance.rate = Math.max(0.1, Math.min(2.0, baseRate + rateVariation));
+                    utterance.pitch = Math.max(0.1, Math.min(2.0, basePitch + pitchVariation));
+                    utterance.volume = baseVolume;
 
                     // Set up event handlers
                     utterance.onend = () => {
@@ -2572,36 +2626,170 @@
             }
 
             formatRoboticText(text) {
-                // Add robotic speech patterns and pauses
-                let roboticText = text;
+                let roboticText = text.toUpperCase(); // All caps for robotic effect
 
-                // Add robotic acknowledgments
+                // Advanced robotic prefixes with system codes
                 const roboticPrefixes = [
-                    'SYSTEM RESPONSE: ',
-                    'PROCESSING COMPLETE. ',
-                    'COMMAND ACKNOWLEDGED. ',
-                    'VEHICLE SYSTEM UPDATE: ',
-                    'CAR AI ASSISTANT: '
+                    '[SYS-001] AUTOMOTIVE CONTROL UNIT RESPONSE: ',
+                    '[VCU-PROC] VEHICLE COMMAND PROCESSOR: ',
+                    '[AI-CORE] ARTIFICIAL INTELLIGENCE MODULE: ',
+                    '[CAR-NET] VEHICLE NETWORK INTERFACE: ',
+                    '[ROBO-AI] ROBOTIC ASSISTANT PROTOCOL: ',
+                    '[AUTO-SYS] AUTOMATED SYSTEM NOTIFICATION: ',
+                    '[MECH-AI] MECHANICAL INTELLIGENCE UNIT: '
                 ];
 
-                // Randomly add robotic prefix (30% chance)
-                if (Math.random() < 0.3) {
+                // Add robotic prefix (40% chance)
+                if (Math.random() < 0.4) {
                     const prefix = roboticPrefixes[Math.floor(Math.random() * roboticPrefixes.length)];
                     roboticText = prefix + roboticText;
                 }
 
-                // Add pauses for robotic effect
+                // Add robotic glitches and stutters
+                if (Math.random() < this.roboticSettings.glitchChance) {
+                    const glitches = ['*BZZT*', '*WHIRR*', '*BEEP*', '*CLICK*', '*PROCESSING*', '*ERROR-CORRECTED*'];
+                    const glitch = glitches[Math.floor(Math.random() * glitches.length)];
+                    roboticText = glitch + ' ' + roboticText;
+                }
+
+                // Enhanced robotic word transformations
+                const roboticTransforms = {
+                    'HELLO': 'HEL-LO',
+                    'BATTERY': 'BAT-TER-Y CELL',
+                    'ENGINE': 'EN-GINE UNIT',
+                    'VEHICLE': 'VEE-HI-CLE SYSTEM',
+                    'TEMPERATURE': 'THER-MAL READ-ING',
+                    'PERCENT': 'PER-CENT-AGE',
+                    'LEVEL': 'LEV-EL STATUS',
+                    'FUEL': 'FUEL RE-SERV-OIR',
+                    'SPEED': 'VE-LOC-I-TY',
+                    'MILES': 'MILE-AGE UNITS',
+                    'DEGREES': 'DE-GREE UNITS',
+                    'FAHRENHEIT': 'FAHR-EN-HEIT SCALE',
+                    'CELSIUS': 'CEL-SI-US SCALE',
+                    'RUNNING': 'OP-ER-A-TION-AL',
+                    'STOPPED': 'DE-AC-TI-VAT-ED',
+                    'STARTING': 'IN-I-TI-AT-ING',
+                    'TURNING': 'EX-E-CUT-ING',
+                    'CHECKING': 'SCAN-NING',
+                    'OPENING': 'AC-TI-VAT-ING',
+                    'CLOSING': 'DE-AC-TI-VAT-ING',
+                    'TRUNK': 'CARGO COM-PART-MENT',
+                    'CAR': 'AU-TO-MO-BILE UNIT',
+                    'SYSTEM': 'SYS-TEM',
+                    'STATUS': 'STAT-US',
+                    'COMMAND': 'COM-MAND',
+                    'COMPLETE': 'COM-PLETE',
+                    'SUCCESSFUL': 'SUC-CESS-FUL',
+                    'CRITICAL': 'CRIT-I-CAL',
+                    'WARNING': 'WARN-ING ALERT',
+                    'ALERT': 'A-LERT SIG-NAL'
+                };
+
+                // Apply robotic transformations
+                Object.keys(roboticTransforms).forEach(word => {
+                    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                    roboticText = roboticText.replace(regex, roboticTransforms[word]);
+                });
+
+                // Add enhanced pauses and robotic timing
                 roboticText = roboticText
-                    .replace(/\./g, '. ... ') // Add pauses after periods
-                    .replace(/,/g, ', .. ') // Add short pauses after commas
-                    .replace(/:/g, ': ... ') // Add pauses after colons
-                    .replace(/percent/gi, 'per-cent') // Make it sound more robotic
-                    .replace(/battery/gi, 'BAT-TER-Y') // Emphasize technical terms
-                    .replace(/engine/gi, 'EN-GINE')
-                    .replace(/vehicle/gi, 'VEE-HI-CLE')
-                    .replace(/temperature/gi, 'TEM-PER-A-TURE');
+                    .replace(/\./g, '. <break time="500ms"/> ') // Longer pauses after periods
+                    .replace(/,/g, ', <break time="200ms"/> ') // Short pauses after commas
+                    .replace(/:/g, ': <break time="300ms"/> ') // Medium pauses after colons
+                    .replace(/;/g, '; <break time="400ms"/> ') // Pauses after semicolons
+                    .replace(/\?/g, '? <break time="600ms"/> ') // Question pauses
+                    .replace(/!/g, '! <break time="400ms"/> '); // Exclamation pauses
+
+                // Add robotic emphasis markers
+                roboticText = roboticText
+                    .replace(/\b(\d+)\b/g, '<emphasis level="strong">$1</emphasis>') // Emphasize numbers
+                    .replace(/\b(ALERT|WARNING|CRITICAL|ERROR)\b/g, '<emphasis level="strong">$1</emphasis>'); // Emphasize alerts
+
+                // Add robotic suffix occasionally
+                const roboticSuffixes = [
+                    ' <break time="300ms"/> END TRANSMISSION.',
+                    ' <break time="300ms"/> SYSTEM READY.',
+                    ' <break time="300ms"/> AWAITING NEXT COMMAND.',
+                    ' <break time="300ms"/> PROCESS COMPLETE.',
+                    ' <break time="300ms"/> STANDING BY.'
+                ];
+
+                if (Math.random() < 0.25) {
+                    const suffix = roboticSuffixes[Math.floor(Math.random() * roboticSuffixes.length)];
+                    roboticText += suffix;
+                }
 
                 return roboticText;
+            }
+
+            // Advanced robotic speech with segmented delivery
+            async speakRobotic(text, options = {}) {
+                const segments = this.segmentTextForRoboticSpeech(text);
+
+                for (let i = 0; i < segments.length; i++) {
+                    const segment = segments[i];
+                    const isEmphasis = segment.type === 'emphasis';
+                    const isPause = segment.type === 'pause';
+
+                    if (isPause) {
+                        await this.delay(segment.duration);
+                        continue;
+                    }
+
+                    const segmentOptions = {
+                        rate: isEmphasis ? this.roboticSettings.emphasisRate : options.rate,
+                        pitch: isEmphasis ? this.roboticSettings.emphasisPitch : options.pitch,
+                        volume: options.volume || this.roboticSettings.baseVolume
+                    };
+
+                    await this.speak(segment.text, segmentOptions);
+
+                    // Add micro-pause between segments for robotic effect
+                    if (i < segments.length - 1) {
+                        await this.delay(100);
+                    }
+                }
+            }
+
+            // Segment text for robotic speech delivery
+            segmentTextForRoboticSpeech(text) {
+                const segments = [];
+                const roboticText = this.formatRoboticText(text);
+
+                // Split by SSML-like break tags
+                const parts = roboticText.split(/(<break time="\d+ms"\/>)/);
+
+                for (const part of parts) {
+                    if (part.includes('<break time=')) {
+                        const match = part.match(/(\d+)ms/);
+                        if (match) {
+                            segments.push({
+                                type: 'pause',
+                                duration: parseInt(match[1])
+                            });
+                        }
+                    } else if (part.includes('<emphasis level="strong">')) {
+                        const emphasisText = part.replace(/<emphasis level="strong">|<\/emphasis>/g, '');
+                        if (emphasisText.trim()) {
+                            segments.push({
+                                type: 'emphasis',
+                                text: emphasisText.trim()
+                            });
+                        }
+                    } else if (part.trim()) {
+                        // Clean up any remaining SSML tags
+                        const cleanText = part.replace(/<[^>]*>/g, '').trim();
+                        if (cleanText) {
+                            segments.push({
+                                type: 'normal',
+                                text: cleanText
+                            });
+                        }
+                    }
+                }
+
+                return segments;
             }
 
             // Method to select best male voice (extracted from initializeVoices)
@@ -2906,30 +3094,95 @@
                     aiVoice.selectBestMaleVoice();
                 }
 
-                // Test with a simple utterance first
-                const testUtterance = new SpeechSynthesisUtterance("Hello");
-                testUtterance.volume = 0.1; // Very quiet test
-
-                // Test if speech synthesis works
-                speechSynthesis.speak(testUtterance);
-
-                // Wait a moment then speak the actual message
-                setTimeout(async () => {
-                    try {
-                        await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
-                    } catch (speakError) {
-                        console.error('Speak error:', speakError);
-                        // Try with basic utterance
-                        const basicUtterance = new SpeechSynthesisUtterance("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
-                        basicUtterance.rate = 0.8;
-                        basicUtterance.pitch = 0.7;
-                        speechSynthesis.speak(basicUtterance);
-                    }
-                }, 500);
+                // Test with enhanced robotic speech
+                try {
+                    await aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                } catch (speakError) {
+                    console.error('Robotic speak error:', speakError);
+                    // Fallback to regular speak
+                    await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                }
 
             } catch (error) {
                 console.error('Voice test error:', error);
                 showVoiceErrorDialog();
+            }
+        }
+
+        // Update robotic settings from controls
+        function updateRoboticSettings() {
+            const speechRate = document.getElementById('speechRate').value;
+            const voicePitch = document.getElementById('voicePitch').value;
+            const glitchLevel = document.getElementById('glitchLevel').value;
+            const roboticMode = document.getElementById('roboticMode').value;
+
+            // Update display values
+            document.getElementById('rateValue').textContent = speechRate;
+            document.getElementById('pitchValue').textContent = voicePitch;
+            document.getElementById('glitchValue').textContent = glitchLevel + '%';
+
+            // Update AI voice settings
+            aiVoice.roboticSettings.baseRate = parseFloat(speechRate);
+            aiVoice.roboticSettings.basePitch = parseFloat(voicePitch);
+            aiVoice.roboticSettings.glitchChance = parseFloat(glitchLevel) / 100;
+
+            // Apply mode-specific settings
+            applyRoboticMode(roboticMode);
+
+            console.log('🤖 Robotic settings updated:', {
+                rate: speechRate,
+                pitch: voicePitch,
+                glitch: glitchLevel + '%',
+                mode: roboticMode
+            });
+        }
+
+        // Apply specific robotic mode characteristics
+        function applyRoboticMode(mode) {
+            switch(mode) {
+                case 'military':
+                    aiVoice.roboticSettings.emphasisRate = 0.5;
+                    aiVoice.roboticSettings.emphasisPitch = 0.3;
+                    aiVoice.roboticSettings.pauseDuration = 400;
+                    break;
+                case 'ai-core':
+                    aiVoice.roboticSettings.emphasisRate = 0.3;
+                    aiVoice.roboticSettings.emphasisPitch = 0.2;
+                    aiVoice.roboticSettings.pauseDuration = 500;
+                    break;
+                case 'maintenance':
+                    aiVoice.roboticSettings.emphasisRate = 0.7;
+                    aiVoice.roboticSettings.emphasisPitch = 0.5;
+                    aiVoice.roboticSettings.pauseDuration = 200;
+                    break;
+                case 'security':
+                    aiVoice.roboticSettings.emphasisRate = 0.4;
+                    aiVoice.roboticSettings.emphasisPitch = 0.2;
+                    aiVoice.roboticSettings.pauseDuration = 350;
+                    break;
+                default: // standard
+                    aiVoice.roboticSettings.emphasisRate = 0.4;
+                    aiVoice.roboticSettings.emphasisPitch = 0.3;
+                    aiVoice.roboticSettings.pauseDuration = 300;
+            }
+        }
+
+        // Test robotic mode
+        async function testRoboticMode() {
+            const mode = document.getElementById('roboticMode').value;
+            const testMessages = {
+                'standard': 'Standard robotic protocol activated. All systems operational.',
+                'military': 'Military protocol engaged. Awaiting orders, commander.',
+                'ai-core': 'AI core system online. Processing advanced algorithms.',
+                'maintenance': 'Maintenance bot ready. Diagnostic systems active.',
+                'security': 'Security system armed. Perimeter monitoring enabled.'
+            };
+
+            try {
+                await aiVoice.speakRobotic(testMessages[mode] || testMessages.standard);
+            } catch (error) {
+                console.error('Mode test error:', error);
+                await aiVoice.speak(testMessages[mode] || testMessages.standard);
             }
         }
 
@@ -3065,8 +3318,8 @@
             statusEl.style.color = '#4285f4';
 
             try {
-                // AI greeting
-                await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                // AI greeting with enhanced robotic speech
+                await aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
                 setTimeout(async () => {
                     const randomIndex = Math.floor(Math.random() * demoCommands.length);
@@ -3074,8 +3327,8 @@
                     statusEl.textContent = `You said: "${command}"`;
                     statusEl.style.color = '#34a853';
 
-                    // AI acknowledges the command
-                    await aiVoice.speak("VOICE COMMAND DETECTED: " + command.toUpperCase());
+                    // AI acknowledges the command with enhanced robotic speech
+                    await aiVoice.speakRobotic("VOICE COMMAND DETECTED: " + command.toUpperCase());
 
                     setTimeout(async () => {
                         let response;
@@ -3083,28 +3336,28 @@
                         // Process the command
                         if (command.includes('start')) {
                             response = carDataManager.startEngine();
-                            await aiVoice.speak("COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE.");
+                            await aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE.");
                         } else if (command.includes('turn off') || command.includes('stop')) {
                             response = carDataManager.stopEngine();
-                            await aiVoice.speak("COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE.");
+                            await aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE.");
                         } else if (command.includes('status') || command.includes('check')) {
                             response = carDataManager.getCarStatus();
                             const speechText = await aiVoice.getCarStatusSpeech();
-                            await aiVoice.speak(speechText);
+                            await aiVoice.speakRobotic(speechText);
                         } else if (command.includes('battery')) {
                             const batteryLevel = Math.round(carDataManager.realTimeData.batteryLevel);
                             response = `Battery level: ${batteryLevel}%`;
-                            await aiVoice.speak(`BATTERY CHARGE LEVEL: ${batteryLevel} PERCENT.`);
+                            await aiVoice.speakRobotic(`BATTERY CHARGE LEVEL: ${batteryLevel} PERCENT.`);
                         } else if (command.includes('fuel')) {
                             const fuelLevel = Math.round(carDataManager.realTimeData.fuelLevel);
                             response = `Fuel level: ${fuelLevel}%`;
-                            await aiVoice.speak(`FUEL RESERVES: ${fuelLevel} PERCENT.`);
+                            await aiVoice.speakRobotic(`FUEL RESERVES: ${fuelLevel} PERCENT.`);
                         } else if (command.includes('open') && command.includes('trunk')) {
                             response = `🚗 Trunk opened successfully`;
-                            await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED.");
+                            await aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED.");
                         } else if (command.includes('close') && command.includes('trunk')) {
                             response = `🚗 Trunk closed successfully`;
-                            await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
+                            await aiVoice.speakRobotic("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
                         } else if (command.includes('active') && command.includes('all')) {
                             response = `🚗 Automated sequence started - watch the magic happen!`;
                             // Start the automated sequence (it will speak each step automatically)
@@ -3124,8 +3377,8 @@
                             button.disabled = false;
                             demoActive = false;
 
-                            // AI closing message
-                            await aiVoice.speak("COMMAND SEQUENCE COMPLETE. AWAITING FURTHER INSTRUCTIONS.");
+                            // AI closing message with enhanced robotic speech
+                            await aiVoice.speakRobotic("COMMAND SEQUENCE COMPLETE. AWAITING FURTHER INSTRUCTIONS.");
                         }, 3000);
                     }, 2000);
                 }, 2000);
@@ -3154,14 +3407,14 @@
             statusEl.style.color = '#4285f4';
 
             try {
-                await aiVoice.speak("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
+                await aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
                 const command = await aiVoice.listen();
                 statusEl.textContent = `You said: "${command}"`;
                 statusEl.style.color = '#34a853';
 
                 const response = await aiVoice.processVoiceCommand(command);
-                await aiVoice.speak(response);
+                await aiVoice.speakRobotic(response);
 
                 statusEl.textContent = response;
                 statusEl.style.color = '#fbbc05';
@@ -3176,7 +3429,7 @@
 
             } catch (error) {
                 console.error('Voice recognition error:', error);
-                await aiVoice.speak("VOICE INPUT ERROR DETECTED. PLEASE REPEAT COMMAND.");
+                await aiVoice.speakRobotic("VOICE INPUT ERROR DETECTED. PLEASE REPEAT COMMAND.");
                 statusEl.textContent = 'Voice recognition error. Please try again.';
                 statusEl.style.color = '#ea4335';
                 button.textContent = '🎤 Start Voice Demo';
