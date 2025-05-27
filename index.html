@@ -2085,6 +2085,14 @@
                         </ul>
                     </div>
                     <div>
+                        <h4 style="color: #9c27b0;">🚀 Full Activation:</h4>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                            <li>"Please activate all"</li>
+                            <li>"Turn on everything"</li>
+                            <li>"Start all systems"</li>
+                        </ul>
+                    </div>
+                    <div>
                         <h4 style="color: #ea4335;">❓ Help & Info:</h4>
                         <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
                             <li>"Hello" or "Hi"</li>
@@ -2931,11 +2939,11 @@
                 }
 
                 if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
-                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
+                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, FULL SYSTEM ACTIVATION, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
                 }
 
                 if (lowerCommand.includes('help')) {
-                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
+                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, ACTIVATE ALL FEATURES, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
                 }
 
                 if (lowerCommand.includes('battery')) {
@@ -2948,8 +2956,52 @@
                     return `FUEL RESERVES: ${fuelLevel} PERCENT. ${fuelLevel < 15 ? 'FUEL LEVEL CRITICALLY LOW. REFUELING RECOMMENDED.' : 'FUEL LEVEL ACCEPTABLE.'}`;
                 }
 
+                // Activate all features command
+                if ((lowerCommand.includes('please') && lowerCommand.includes('activate') && lowerCommand.includes('all')) ||
+                    (lowerCommand.includes('active') && lowerCommand.includes('all')) ||
+                    (lowerCommand.includes('turn on') && lowerCommand.includes('everything')) ||
+                    (lowerCommand.includes('start') && lowerCommand.includes('all'))) {
+                    return this.activateAllFeatures();
+                }
+
                 // Default response
-                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, OPEN TRUNK, CLOSE TRUNK, CHECK STATUS.";
+                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, OPEN TRUNK, CLOSE TRUNK, ACTIVATE ALL FEATURES, CHECK STATUS.";
+            }
+
+            activateAllFeatures() {
+                // Start the engine
+                carDataManager.startEngine();
+
+                // Simulate activating all car features
+                const features = [
+                    "ENGINE SYSTEM",
+                    "CLIMATE CONTROL",
+                    "NAVIGATION SYSTEM",
+                    "ENTERTAINMENT SYSTEM",
+                    "SECURITY SYSTEM",
+                    "LIGHTING SYSTEM",
+                    "TRUNK ACCESS",
+                    "DOOR LOCKS",
+                    "PARKING SENSORS",
+                    "BACKUP CAMERA"
+                ];
+
+                let response = "COMMAND ACKNOWLEDGED. INITIATING FULL VEHICLE ACTIVATION SEQUENCE. ";
+                response += "ACTIVATING ALL SYSTEMS: ";
+
+                features.forEach((feature, index) => {
+                    if (index === features.length - 1) {
+                        response += `AND ${feature}. `;
+                    } else if (index === features.length - 2) {
+                        response += `${feature} `;
+                    } else {
+                        response += `${feature}, `;
+                    }
+                });
+
+                response += "ALL VEHICLE SYSTEMS NOW OPERATIONAL. FULL ACTIVATION COMPLETE. VEHICLE READY FOR OPERATION.";
+
+                return response;
             }
         }
 
@@ -3033,7 +3085,8 @@
             "Hey Google, what's my battery level",
             "Hey Google, how much fuel do I have",
             "Hey Google, open trunk",
-            "Hey Google, close trunk"
+            "Hey Google, close trunk",
+            "Hey Google, please activate all"
         ];
 
         async function startDemo() {
@@ -3090,6 +3143,11 @@
                         } else if (command.includes('close') && command.includes('trunk')) {
                             response = `🚗 Trunk closed successfully`;
                             await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
+                        } else if ((command.includes('please') && command.includes('activate') && command.includes('all')) ||
+                                   (command.includes('active') && command.includes('all'))) {
+                            response = `🚗 All car systems activated successfully`;
+                            const activateResponse = aiVoice.activateAllFeatures();
+                            await aiVoice.speak(activateResponse);
                         }
 
                         statusEl.textContent = response;
