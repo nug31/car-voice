@@ -2719,6 +2719,19 @@
                 return;
             }
 
+            // First, AI greets the user
+            statusEl.textContent = '🎤 AI speaking...';
+            statusEl.style.color = '#4285f4';
+
+            speak('Hello I\'m Car Voice, need to help?', function() {
+                // After greeting, start listening for commands
+                startListening();
+            });
+        }
+
+        function startListening() {
+            const statusEl = document.getElementById('voiceStatus');
+
             // Initialize speech recognition
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -2764,7 +2777,6 @@
             // Start recognition
             try {
                 recognition.start();
-                speak('I am listening for your command. You can say start engine, stop engine, or check car status.');
             } catch (error) {
                 console.error('Failed to start voice recognition:', error);
                 statusEl.textContent = '❌ Failed to start voice recognition';
@@ -2812,19 +2824,29 @@
                 statusEl.textContent = '📊 Checking car status...';
                 statusEl.style.color = '#ff9800';
 
-                // Get car data and speak it
+                // Get car data and determine if connected to real car
                 const data = carDataManager.realTimeData;
+                const isConnected = carDataManager.isConnected();
                 const engineStatus = data.engineRunning ? 'running' : 'stopped';
                 const battery = Math.round(data.batteryLevel);
                 const fuel = Math.round(data.fuelLevel);
+                const temp = Math.round(data.engineTemp);
 
-                const statusMessage = `Car status report: Engine is ${engineStatus}. Battery level is ${battery} percent. Fuel level is ${fuel} percent.`;
+                let statusMessage;
+                if (isConnected) {
+                    // Real data from connected car
+                    statusMessage = `OK your car status is based on real data. Engine is ${engineStatus}. Battery level is ${battery} percent. Fuel level is ${fuel} percent. Engine temperature is ${temp} degrees Fahrenheit.`;
+                } else {
+                    // Sample data when not connected
+                    statusMessage = `OK your car status is based on sample data since your car is not connected. Engine is ${engineStatus}. Battery level is ${battery} percent. Fuel level is ${fuel} percent. Engine temperature is ${temp} degrees Fahrenheit.`;
+                }
+
                 speak(statusMessage);
 
                 setTimeout(() => {
                     statusEl.textContent = '✅ Status report complete!';
                     statusEl.style.color = '#34a853';
-                }, 3000);
+                }, 4000);
                 return;
             }
 
@@ -2840,13 +2862,22 @@
         }
 
         // Simple text-to-speech helper function
-        function speak(text) {
+        function speak(text, callback) {
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.rate = 0.8;
                 utterance.pitch = 1.0;
                 utterance.volume = 1.0;
+
+                // Add callback support
+                if (callback && typeof callback === 'function') {
+                    utterance.onend = callback;
+                }
+
                 speechSynthesis.speak(utterance);
+            } else if (callback && typeof callback === 'function') {
+                // If speech synthesis is not supported, still call the callback
+                callback();
             }
         }
 

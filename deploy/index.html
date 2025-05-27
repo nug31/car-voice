@@ -3781,19 +3781,21 @@
                 return;
             }
 
-            statusEl.textContent = '🎧 Listening for voice commands... Speak now!';
-            statusEl.style.color = '#ea4335';
+            statusEl.textContent = '🎤 AI speaking...';
+            statusEl.style.color = '#4285f4';
 
-            // Announce listening mode
-            aiVoice.speakRobotic("VOICE RECOGNITION ACTIVATED. LISTENING FOR COMMANDS.");
+            // First, AI greets the user
+            aiVoice.speakRobotic("HELLO I'M CAR VOICE, NEED TO HELP?").then(() => {
+                // After greeting, start listening for commands
+                statusEl.textContent = '🎧 Listening for voice commands... Speak now!';
+                statusEl.style.color = '#ea4335';
 
-            setTimeout(() => {
                 if (aiVoice.recognition) {
                     aiVoice.listen().then(command => {
                         statusEl.textContent = `🎤 Heard: "${command}" - Processing...`;
                         statusEl.style.color = '#fbbc05';
 
-                        const response = aiVoice.processVoiceCommand(command);
+                        const response = processEnhancedVoiceCommand(command);
                         aiVoice.speakRobotic(response);
 
                         setTimeout(() => {
@@ -3809,7 +3811,35 @@
                     statusEl.textContent = '⚠️ Voice recognition not supported in this browser.';
                     statusEl.style.color = '#fbbc05';
                 }
-            }, 2000);
+            });
+        }
+
+        // Enhanced voice command processing with specific car status response
+        function processEnhancedVoiceCommand(command) {
+            const lowerCommand = command.toLowerCase();
+
+            // Check car status command with specific response format
+            if (lowerCommand.includes('check car status') || lowerCommand.includes('car status') ||
+                lowerCommand.includes('status report') || lowerCommand.includes('check status')) {
+
+                const data = carDataManager.realTimeData;
+                const isConnected = carDataManager.isConnected();
+                const engineStatus = data.engineRunning ? 'RUNNING' : 'STOPPED';
+                const battery = Math.round(data.batteryLevel);
+                const fuel = Math.round(data.fuelLevel);
+                const temp = Math.round(data.engineTemp);
+
+                if (isConnected) {
+                    // Real data from connected car
+                    return `OK YOUR CAR STATUS IS BASED ON REAL DATA. ENGINE IS ${engineStatus}. BATTERY LEVEL IS ${battery} PERCENT. FUEL LEVEL IS ${fuel} PERCENT. ENGINE TEMPERATURE IS ${temp} DEGREES FAHRENHEIT.`;
+                } else {
+                    // Sample data when not connected
+                    return `OK YOUR CAR STATUS IS BASED ON SAMPLE DATA SINCE YOUR CAR IS NOT CONNECTED. ENGINE IS ${engineStatus}. BATTERY LEVEL IS ${battery} PERCENT. FUEL LEVEL IS ${fuel} PERCENT. ENGINE TEMPERATURE IS ${temp} DEGREES FAHRENHEIT.`;
+                }
+            }
+
+            // Use the existing processVoiceCommand for other commands
+            return aiVoice.processVoiceCommand(command);
         }
 
         function testRoboticVoice() {
