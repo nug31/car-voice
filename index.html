@@ -3484,19 +3484,14 @@
         window.aiVoice = null;
         let voiceSystemReady = false;
 
-        // Initialize voice system when page loads
+        // Initialize voice system when page loads - SILENT INITIALIZATION
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 window.aiVoice = new AIVoiceSystem();
                 voiceSystemReady = true;
-                console.log('🎤 AI Voice System initialized successfully');
+                console.log('🎤 AI Voice System initialized successfully - SILENT MODE');
 
-                // Welcome message after a short delay
-                setTimeout(() => {
-                    if (window.aiVoice && voiceSystemReady) {
-                        window.aiVoice.speakRobotic("WELCOME TO CAR VOICE CONTROL SYSTEM. AI ASSISTANT ONLINE. ALL VEHICLE MONITORING SYSTEMS ACTIVE.");
-                    }
-                }, 3000);
+                // NO AUTOMATIC WELCOME MESSAGE - AI only speaks when buttons are clicked
 
             } catch (error) {
                 console.error('Voice system initialization failed:', error);
@@ -3680,10 +3675,10 @@
                 return;
             }
 
-            statusEl.textContent = '🎤 Voice Demo...';
+            statusEl.textContent = '🎤 Voice Demo - Click to hear AI voice!';
             statusEl.style.color = '#4285f4';
 
-            // Simple short demo message
+            // Only speak when this button is clicked - this is the demo voice
             aiVoice.speakRobotic("HELLO. I AM CAR AI.");
 
             setTimeout(() => {
@@ -3705,8 +3700,7 @@
             statusEl.textContent = '🎧 Listening... Speak now!';
             statusEl.style.color = '#ea4335';
 
-            // Short announcement
-            aiVoice.speakRobotic("LISTENING.");
+            // NO AUTOMATIC ANNOUNCEMENT - Just start listening silently
 
             setTimeout(() => {
                 if (aiVoice.recognition) {
@@ -3785,8 +3779,7 @@
             statusEl.textContent = '🚀 Starting Auto Sequence...';
             statusEl.style.color = '#ff5722';
 
-            // Short announcement
-            aiVoice.speakRobotic("STARTING AUTO SEQUENCE.");
+            // NO AUTOMATIC ANNOUNCEMENT - Just run the sequence silently
 
             // Run the full automated sequence
             setTimeout(() => {
