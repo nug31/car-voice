@@ -2085,9 +2085,9 @@
                         </ul>
                     </div>
                     <div>
-                        <h4 style="color: #9c27b0;">🚀 Active All:</h4>
+                        <h4 style="color: #9c27b0;">🚀 Active All (Auto Sequence):</h4>
                         <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                            <li>"Active all"</li>
+                            <li>"Active all" - Runs: Engine On → Open Trunk → Close Trunk → Check Status → Engine Off</li>
                         </ul>
                     </div>
                     <div>
@@ -2937,11 +2937,11 @@
                 }
 
                 if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
-                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, FULL SYSTEM ACTIVATION, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
+                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL, TRUNK OPERATION, AUTOMATED COMMAND SEQUENCES, AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
                 }
 
                 if (lowerCommand.includes('help')) {
-                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, ACTIVE ALL, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
+                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, OPEN TRUNK, CLOSE TRUNK, ACTIVE ALL AUTOMATED SEQUENCE, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
                 }
 
                 if (lowerCommand.includes('battery')) {
@@ -2956,47 +2956,55 @@
 
                 // Active all command
                 if (lowerCommand.includes('active') && lowerCommand.includes('all')) {
-                    return this.activateAllFeatures();
+                    // Start the automated sequence
+                    this.activateAllFeatures();
+                    return "AUTOMATED SEQUENCE INITIATED. EXECUTING ALL COMMANDS IN ORDER.";
                 }
 
                 // Default response
                 return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, OPEN TRUNK, CLOSE TRUNK, ACTIVE ALL, CHECK STATUS.";
             }
 
-            activateAllFeatures() {
-                // Start the engine
+            async activateAllFeatures() {
+                // Execute sequence: engine on, open trunk, close trunk, check status, engine off
+                let response = "COMMAND ACKNOWLEDGED. INITIATING AUTOMATED SEQUENCE. ";
+
+                // 1. Start Engine
+                response += "STEP ONE: STARTING ENGINE. ";
                 carDataManager.startEngine();
+                await this.speak("ENGINE ACTIVATION COMPLETE.");
+                await this.delay(2000);
 
-                // Simulate activating all car features
-                const features = [
-                    "ENGINE SYSTEM",
-                    "CLIMATE CONTROL",
-                    "NAVIGATION SYSTEM",
-                    "ENTERTAINMENT SYSTEM",
-                    "SECURITY SYSTEM",
-                    "LIGHTING SYSTEM",
-                    "TRUNK ACCESS",
-                    "DOOR LOCKS",
-                    "PARKING SENSORS",
-                    "BACKUP CAMERA"
-                ];
+                // 2. Open Trunk (buka bagasi)
+                response += "STEP TWO: OPENING TRUNK. ";
+                await this.speak("INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED.");
+                await this.delay(2000);
 
-                let response = "COMMAND ACKNOWLEDGED. INITIATING FULL VEHICLE ACTIVATION SEQUENCE. ";
-                response += "ACTIVATING ALL SYSTEMS: ";
+                // 3. Close Trunk (tutup bagasi)
+                response += "STEP THREE: CLOSING TRUNK. ";
+                await this.speak("INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
+                await this.delay(2000);
 
-                features.forEach((feature, index) => {
-                    if (index === features.length - 1) {
-                        response += `AND ${feature}. `;
-                    } else if (index === features.length - 2) {
-                        response += `${feature} `;
-                    } else {
-                        response += `${feature}, `;
-                    }
-                });
+                // 4. Check Car Status
+                response += "STEP FOUR: CHECKING VEHICLE STATUS. ";
+                const statusText = await this.getCarStatusSpeech();
+                await this.speak(statusText);
+                await this.delay(3000);
 
-                response += "ALL VEHICLE SYSTEMS NOW OPERATIONAL. FULL ACTIVATION COMPLETE. VEHICLE READY FOR OPERATION.";
+                // 5. Turn Off Engine
+                response += "STEP FIVE: SHUTTING DOWN ENGINE. ";
+                carDataManager.stopEngine();
+                await this.speak("ENGINE SHUTDOWN COMPLETE.");
+                await this.delay(1000);
+
+                response += "AUTOMATED SEQUENCE COMPLETE. ALL OPERATIONS EXECUTED SUCCESSFULLY.";
 
                 return response;
+            }
+
+            // Helper method for delays
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
 
@@ -3139,9 +3147,10 @@
                             response = `🚗 Trunk closed successfully`;
                             await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
                         } else if (command.includes('active') && command.includes('all')) {
-                            response = `🚗 All car systems activated successfully`;
-                            const activateResponse = aiVoice.activateAllFeatures();
-                            await aiVoice.speak(activateResponse);
+                            response = `🚗 Automated sequence started - watch the magic happen!`;
+                            await aiVoice.speak("AUTOMATED SEQUENCE INITIATED. EXECUTING ALL COMMANDS IN ORDER.");
+                            // Start the automated sequence (it will speak each step)
+                            aiVoice.activateAllFeatures();
                         }
 
                         statusEl.textContent = response;
