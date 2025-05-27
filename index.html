@@ -2956,9 +2956,9 @@
 
                 // Active all command
                 if (lowerCommand.includes('active') && lowerCommand.includes('all')) {
-                    // Start the automated sequence
+                    // Start the automated sequence (it will speak all steps)
                     this.activateAllFeatures();
-                    return "SEQUENCE STARTING.";
+                    return "INITIATING AUTOMATED SEQUENCE.";
                 }
 
                 // Default response
@@ -2967,7 +2967,10 @@
 
             async activateAllFeatures() {
                 // Execute sequence: engine on, open trunk, close trunk, check status, engine off
-                let response = "AUTOMATED SEQUENCE INITIATED. ";
+
+                // Initial announcement
+                await this.speak("SEQUENCE STARTING.");
+                await this.delay(1000);
 
                 // 1. Start Engine
                 carDataManager.startEngine();
@@ -2982,7 +2985,7 @@
                 await this.speak("TRUNK CLOSED.");
                 await this.delay(1500);
 
-                // 4. Check Car Status
+                // 4. Check Car Status - Full detailed status report
                 const statusText = await this.getCarStatusSpeech();
                 await this.speak(statusText);
                 await this.delay(2000);
@@ -2991,9 +2994,7 @@
                 carDataManager.stopEngine();
                 await this.speak("ENGINE OFF. SEQUENCE COMPLETE.");
 
-                response += "ALL OPERATIONS EXECUTED SUCCESSFULLY.";
-
-                return response;
+                return "AUTOMATED SEQUENCE EXECUTED SUCCESSFULLY.";
             }
 
             // Helper method for delays
@@ -3142,8 +3143,7 @@
                             await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
                         } else if (command.includes('active') && command.includes('all')) {
                             response = `🚗 Automated sequence started - watch the magic happen!`;
-                            await aiVoice.speak("SEQUENCE STARTING.");
-                            // Start the automated sequence (it will speak each step)
+                            // Start the automated sequence (it will speak each step automatically)
                             aiVoice.activateAllFeatures();
                         }
 
