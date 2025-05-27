@@ -3675,16 +3675,16 @@
                 return;
             }
 
-            statusEl.textContent = '🎤 Voice Demo - Click to hear AI voice!';
+            statusEl.textContent = '🎤 Voice Commands - AI responding...';
             statusEl.style.color = '#4285f4';
 
-            // Only speak when this button is clicked - this is the demo voice
-            aiVoice.speakRobotic("HELLO. I AM CAR AI.");
+            // AI voice greeting when Voice Commands button is clicked
+            aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
             setTimeout(() => {
-                statusEl.textContent = '✅ Voice Demo Complete!';
+                statusEl.textContent = '✅ Ready for voice commands!';
                 statusEl.style.color = '#34a853';
-            }, 2000);
+            }, 3000);
         }
 
         function startListening() {
@@ -3697,12 +3697,16 @@
                 return;
             }
 
-            statusEl.textContent = '🎧 Listening... Speak now!';
+            statusEl.textContent = '🎤 AI Voice responding...';
             statusEl.style.color = '#ea4335';
 
-            // NO AUTOMATIC ANNOUNCEMENT - Just start listening silently
+            // AI voice greeting when Voice Commands button is clicked
+            aiVoice.speakRobotic("HELLO. I AM CAR VOICE. CAN I HELP YOU?");
 
             setTimeout(() => {
+                statusEl.textContent = '🎧 Now listening for your voice commands...';
+                statusEl.style.color = '#fbbc05';
+
                 if (aiVoice.recognition) {
                     aiVoice.listen().then(command => {
                         statusEl.textContent = `🎤 Heard: "${command}"`;
@@ -3724,7 +3728,7 @@
                     statusEl.textContent = '⚠️ Voice recognition not supported.';
                     statusEl.style.color = '#fbbc05';
                 }
-            }, 1000);
+            }, 3000);
         }
 
         function testRoboticVoice() {
