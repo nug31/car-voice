@@ -1,0 +1,55 @@
+name: 🚀 Auto-Deploy to Netlify
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy-info:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📋 Deployment Info
+      run: |
+        echo "🚀 Auto-deployment triggered!"
+        echo "📦 Repository: ${{ github.repository }}"
+        echo "🌿 Branch: ${{ github.ref_name }}"
+        echo "👤 Author: ${{ github.actor }}"
+        echo "💬 Commit: ${{ github.event.head_commit.message }}"
+        echo ""
+        echo "🌐 Netlify will automatically:"
+        echo "  ✅ Pull latest code from GitHub"
+        echo "  ✅ Deploy to production"
+        echo "  ✅ Update live site"
+        echo "  ✅ Enable HTTPS & CDN"
+        echo ""
+        echo "🔗 Check deployment status at: https://app.netlify.com"
+
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 🔍 Validate Files
+      run: |
+        echo "📁 Checking required files..."
+        
+        if [ -f "index.html" ]; then
+          echo "✅ index.html found"
+        else
+          echo "❌ index.html missing"
+          exit 1
+        fi
+        
+        if [ -f "netlify.toml" ]; then
+          echo "✅ netlify.toml found"
+        else
+          echo "❌ netlify.toml missing"
+          exit 1
+        fi
+        
+        echo "🎉 All required files present!"
+        echo "🚀 Ready for Netlify deployment!"
