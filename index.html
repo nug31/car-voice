@@ -2958,7 +2958,7 @@
                 if (lowerCommand.includes('active') && lowerCommand.includes('all')) {
                     // Start the automated sequence
                     this.activateAllFeatures();
-                    return "AUTOMATED SEQUENCE INITIATED. EXECUTING ALL COMMANDS IN ORDER.";
+                    return "SEQUENCE STARTING.";
                 }
 
                 // Default response
@@ -2967,37 +2967,31 @@
 
             async activateAllFeatures() {
                 // Execute sequence: engine on, open trunk, close trunk, check status, engine off
-                let response = "COMMAND ACKNOWLEDGED. INITIATING AUTOMATED SEQUENCE. ";
+                let response = "AUTOMATED SEQUENCE INITIATED. ";
 
                 // 1. Start Engine
-                response += "STEP ONE: STARTING ENGINE. ";
                 carDataManager.startEngine();
-                await this.speak("ENGINE ACTIVATION COMPLETE.");
-                await this.delay(2000);
+                await this.speak("ENGINE ON.");
+                await this.delay(1500);
 
                 // 2. Open Trunk (buka bagasi)
-                response += "STEP TWO: OPENING TRUNK. ";
-                await this.speak("INITIATING TRUNK OPENING SEQUENCE. TRUNK ACCESS GRANTED.");
-                await this.delay(2000);
+                await this.speak("TRUNK OPEN.");
+                await this.delay(1500);
 
                 // 3. Close Trunk (tutup bagasi)
-                response += "STEP THREE: CLOSING TRUNK. ";
-                await this.speak("INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
-                await this.delay(2000);
+                await this.speak("TRUNK CLOSED.");
+                await this.delay(1500);
 
                 // 4. Check Car Status
-                response += "STEP FOUR: CHECKING VEHICLE STATUS. ";
                 const statusText = await this.getCarStatusSpeech();
                 await this.speak(statusText);
-                await this.delay(3000);
+                await this.delay(2000);
 
                 // 5. Turn Off Engine
-                response += "STEP FIVE: SHUTTING DOWN ENGINE. ";
                 carDataManager.stopEngine();
-                await this.speak("ENGINE SHUTDOWN COMPLETE.");
-                await this.delay(1000);
+                await this.speak("ENGINE OFF. SEQUENCE COMPLETE.");
 
-                response += "AUTOMATED SEQUENCE COMPLETE. ALL OPERATIONS EXECUTED SUCCESSFULLY.";
+                response += "ALL OPERATIONS EXECUTED SUCCESSFULLY.";
 
                 return response;
             }
@@ -3148,7 +3142,7 @@
                             await aiVoice.speak("COMMAND RECEIVED. INITIATING TRUNK CLOSING SEQUENCE. TRUNK SECURED.");
                         } else if (command.includes('active') && command.includes('all')) {
                             response = `🚗 Automated sequence started - watch the magic happen!`;
-                            await aiVoice.speak("AUTOMATED SEQUENCE INITIATED. EXECUTING ALL COMMANDS IN ORDER.");
+                            await aiVoice.speak("SEQUENCE STARTING.");
                             // Start the automated sequence (it will speak each step)
                             aiVoice.activateAllFeatures();
                         }
