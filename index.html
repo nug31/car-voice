@@ -1826,9 +1826,44 @@
                 <button onclick="getCarStatus()" style="padding: 15px 30px; background: linear-gradient(45deg, #ff9800, #f44336); color: white; border: none; border-radius: 50px; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     📊 Car Status
                 </button>
+
+                <button onclick="startVoiceCommands()" style="padding: 15px 30px; background: linear-gradient(45deg, #9c27b0, #e91e63); color: white; border: none; border-radius: 50px; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    🎙️ Voice Commands
+                </button>
             </div>
 
             <div id="voiceStatus" style="text-align: center; margin: 1rem 0; color: #4285f4; font-size: 1.1rem;">Ready for voice commands!</div>
+
+            <!-- Voice Commands Guide -->
+            <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 1.5rem; margin: 2rem 0; border: 1px solid rgba(255,255,255,0.1);">
+                <h4 style="color: #4285f4; margin-bottom: 1rem; text-align: center;">🎙️ Available Voice Commands</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="background: rgba(52, 168, 83, 0.1); padding: 1rem; border-radius: 10px; border-left: 4px solid #34a853;">
+                        <strong style="color: #34a853;">🚗 Engine Start:</strong><br>
+                        <span style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                            "Start engine"<br>
+                            "Turn on engine"<br>
+                            "Start car"
+                        </span>
+                    </div>
+                    <div style="background: rgba(244, 67, 54, 0.1); padding: 1rem; border-radius: 10px; border-left: 4px solid #f44336;">
+                        <strong style="color: #f44336;">🛑 Engine Stop:</strong><br>
+                        <span style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                            "Stop engine"<br>
+                            "Turn off engine"<br>
+                            "Shut down engine"
+                        </span>
+                    </div>
+                    <div style="background: rgba(255, 152, 0, 0.1); padding: 1rem; border-radius: 10px; border-left: 4px solid #ff9800;">
+                        <strong style="color: #ff9800;">📊 Status Check:</strong><br>
+                        <span style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                            "Check car status"<br>
+                            "Car status"<br>
+                            "Status report"
+                        </span>
+                    </div>
+                </div>
+            </div>
 
             <!-- COMMENTED AI VOICE CONTROLS SECTION -->
             <!-- Uncomment the section below to enable AI voice controls -->
@@ -2666,6 +2701,152 @@
             } else {
                 statusEl.textContent = '❌ Voice not supported in this browser';
                 statusEl.style.color = '#ea4335';
+            }
+        }
+
+        // Voice Commands Functionality
+        let recognition = null;
+        let isListening = false;
+
+        function startVoiceCommands() {
+            const statusEl = document.getElementById('voiceStatus');
+
+            // Check if speech recognition is supported
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                statusEl.textContent = '❌ Voice recognition not supported in this browser';
+                statusEl.style.color = '#ea4335';
+                speak('Voice recognition is not supported in this browser. Please try Chrome or Edge.');
+                return;
+            }
+
+            // Initialize speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            statusEl.textContent = '🎙️ Listening for voice commands...';
+            statusEl.style.color = '#9c27b0';
+
+            // Start listening
+            recognition.onstart = function() {
+                isListening = true;
+                console.log('Voice recognition started');
+            };
+
+            recognition.onresult = function(event) {
+                const command = event.results[0][0].transcript.toLowerCase();
+                console.log('Voice command received:', command);
+
+                statusEl.textContent = `🎤 Heard: "${command}"`;
+                statusEl.style.color = '#e91e63';
+
+                // Process the voice command
+                processVoiceCommand(command);
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                isListening = false;
+
+                statusEl.textContent = '❌ Voice recognition failed. Please try again.';
+                statusEl.style.color = '#ea4335';
+
+                speak('Sorry, I could not understand your command. Please try again.');
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                console.log('Voice recognition ended');
+            };
+
+            // Start recognition
+            try {
+                recognition.start();
+                speak('I am listening for your command. You can say start engine, stop engine, or check car status.');
+            } catch (error) {
+                console.error('Failed to start voice recognition:', error);
+                statusEl.textContent = '❌ Failed to start voice recognition';
+                statusEl.style.color = '#ea4335';
+            }
+        }
+
+        function processVoiceCommand(command) {
+            const statusEl = document.getElementById('voiceStatus');
+
+            // Engine start commands
+            if (command.includes('start engine') || command.includes('turn on engine') || command.includes('start car')) {
+                statusEl.textContent = '🚗 Starting engine...';
+                statusEl.style.color = '#34a853';
+
+                carDataManager.startEngine();
+                speak('Engine started successfully. Your car is now running.');
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Engine started!';
+                    statusEl.style.color = '#34a853';
+                }, 2000);
+                return;
+            }
+
+            // Engine stop commands
+            if (command.includes('stop engine') || command.includes('turn off engine') ||
+                command.includes('shut down engine') || command.includes('stop car')) {
+                statusEl.textContent = '🛑 Stopping engine...';
+                statusEl.style.color = '#f44336';
+
+                carDataManager.stopEngine();
+                speak('Engine stopped successfully. Your car is now turned off.');
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Engine stopped!';
+                    statusEl.style.color = '#f44336';
+                }, 2000);
+                return;
+            }
+
+            // Status check commands
+            if (command.includes('check car status') || command.includes('car status') ||
+                command.includes('status report') || command.includes('check status')) {
+                statusEl.textContent = '📊 Checking car status...';
+                statusEl.style.color = '#ff9800';
+
+                // Get car data and speak it
+                const data = carDataManager.realTimeData;
+                const engineStatus = data.engineRunning ? 'running' : 'stopped';
+                const battery = Math.round(data.batteryLevel);
+                const fuel = Math.round(data.fuelLevel);
+
+                const statusMessage = `Car status report: Engine is ${engineStatus}. Battery level is ${battery} percent. Fuel level is ${fuel} percent.`;
+                speak(statusMessage);
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Status report complete!';
+                    statusEl.style.color = '#34a853';
+                }, 3000);
+                return;
+            }
+
+            // Unknown command
+            statusEl.textContent = '❓ Command not recognized';
+            statusEl.style.color = '#fbbc05';
+            speak('Sorry, I did not understand that command. You can say start engine, stop engine, or check car status.');
+
+            setTimeout(() => {
+                statusEl.textContent = '✅ Ready for voice commands!';
+                statusEl.style.color = '#34a853';
+            }, 3000);
+        }
+
+        // Simple text-to-speech helper function
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                speechSynthesis.speak(utterance);
             }
         }
 
