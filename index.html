@@ -2039,8 +2039,8 @@
 
     <section id="demo" class="demo">
         <div class="container">
-            <h2 class="section-title">AI Voice Demo</h2>
-            <p>Experience our AI voice assistant that can speak and understand your commands</p>
+            <h2 class="section-title">🤖 Robotic AI Voice Demo</h2>
+            <p>Experience our robotic AI voice assistant with male robotic voice that can speak and understand your commands</p>
 
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0;">
                 <button class="demo-button" onclick="startDemo()">🎤 Simulated Voice Demo</button>
@@ -2636,15 +2636,22 @@
                 // Load available voices
                 const loadVoices = () => {
                     this.voices = this.synthesis.getVoices();
-                    // Prefer female voices for AI assistant
+                    // Prefer male robotic voices for AI assistant
                     this.selectedVoice = this.voices.find(voice =>
-                        voice.name.toLowerCase().includes('female') ||
-                        voice.name.toLowerCase().includes('zira') ||
-                        voice.name.toLowerCase().includes('samantha')
+                        voice.name.toLowerCase().includes('male') ||
+                        voice.name.toLowerCase().includes('david') ||
+                        voice.name.toLowerCase().includes('mark') ||
+                        voice.name.toLowerCase().includes('microsoft mark') ||
+                        voice.name.toLowerCase().includes('google uk english male') ||
+                        voice.name.toLowerCase().includes('alex')
+                    ) || this.voices.find(voice =>
+                        voice.lang.startsWith('en') &&
+                        (voice.name.toLowerCase().includes('male') || !voice.name.toLowerCase().includes('female'))
                     ) || this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
 
                     console.log('Available voices:', this.voices.length);
-                    console.log('Selected voice:', this.selectedVoice?.name);
+                    console.log('Selected robotic voice:', this.selectedVoice?.name);
+                    console.log('All available voices:', this.voices.map(v => v.name));
                 };
 
                 loadVoices();
@@ -2690,14 +2697,19 @@
                     // Cancel any ongoing speech
                     this.synthesis.cancel();
 
-                    const utterance = new SpeechSynthesisUtterance(text);
+                    // Add robotic prefixes and formatting
+                    const roboticText = this.formatRoboticText(text);
+
+                    const utterance = new SpeechSynthesisUtterance(roboticText);
                     utterance.voice = this.selectedVoice;
-                    utterance.rate = options.rate || 0.9;
-                    utterance.pitch = options.pitch || 1.0;
-                    utterance.volume = options.volume || 0.8;
+
+                    // Robotic voice settings
+                    utterance.rate = options.rate || 0.75; // Slower, more robotic
+                    utterance.pitch = options.pitch || 0.8; // Lower pitch for robotic effect
+                    utterance.volume = options.volume || 0.9; // Slightly louder
 
                     utterance.onend = () => {
-                        console.log('Speech finished:', text);
+                        console.log('Robotic speech finished:', roboticText);
                         resolve();
                     };
 
@@ -2706,9 +2718,42 @@
                         reject(event.error);
                     };
 
-                    console.log('Speaking:', text);
+                    console.log('Robot speaking:', roboticText);
                     this.synthesis.speak(utterance);
                 });
+            }
+
+            formatRoboticText(text) {
+                // Add robotic speech patterns and pauses
+                let roboticText = text;
+
+                // Add robotic acknowledgments
+                const roboticPrefixes = [
+                    'SYSTEM RESPONSE: ',
+                    'PROCESSING COMPLETE. ',
+                    'COMMAND ACKNOWLEDGED. ',
+                    'VEHICLE SYSTEM UPDATE: ',
+                    'CAR AI ASSISTANT: '
+                ];
+
+                // Randomly add robotic prefix (30% chance)
+                if (Math.random() < 0.3) {
+                    const prefix = roboticPrefixes[Math.floor(Math.random() * roboticPrefixes.length)];
+                    roboticText = prefix + roboticText;
+                }
+
+                // Add pauses for robotic effect
+                roboticText = roboticText
+                    .replace(/\./g, '. ... ') // Add pauses after periods
+                    .replace(/,/g, ', .. ') // Add short pauses after commas
+                    .replace(/:/g, ': ... ') // Add pauses after colons
+                    .replace(/percent/gi, 'per-cent') // Make it sound more robotic
+                    .replace(/battery/gi, 'BAT-TER-Y') // Emphasize technical terms
+                    .replace(/engine/gi, 'EN-GINE')
+                    .replace(/vehicle/gi, 'VEE-HI-CLE')
+                    .replace(/temperature/gi, 'TEM-PER-A-TURE');
+
+                return roboticText;
             }
 
             listen() {
@@ -2735,32 +2780,34 @@
                 let statusText = '';
 
                 if (isConnected) {
-                    statusText = `Here's your car status. `;
+                    statusText = `VEHICLE STATUS REPORT INITIATED. `;
 
                     if (data.engineRunning) {
-                        statusText += `Your engine is currently running at ${Math.round(data.engineRPM)} RPM. `;
-                        statusText += `You're traveling at ${Math.round(data.vehicleSpeed)} miles per hour. `;
+                        statusText += `ENGINE STATUS: OPERATIONAL. CURRENT RPM: ${Math.round(data.engineRPM)}. `;
+                        statusText += `VEHICLE VELOCITY: ${Math.round(data.vehicleSpeed)} MILES PER HOUR. `;
                     } else {
-                        statusText += `Your engine is currently off. `;
+                        statusText += `ENGINE STATUS: OFFLINE. `;
                     }
 
-                    statusText += `Battery level is at ${Math.round(data.batteryLevel)} percent. `;
-                    statusText += `Fuel level is at ${Math.round(data.fuelLevel)} percent. `;
-                    statusText += `Engine temperature is ${Math.round(data.engineTemp)} degrees Fahrenheit. `;
-                    statusText += `Your vehicle has ${data.mileage.toLocaleString()} miles on the odometer.`;
+                    statusText += `BATTERY CHARGE LEVEL: ${Math.round(data.batteryLevel)} PERCENT. `;
+                    statusText += `FUEL RESERVES: ${Math.round(data.fuelLevel)} PERCENT. `;
+                    statusText += `ENGINE THERMAL READING: ${Math.round(data.engineTemp)} DEGREES FAHRENHEIT. `;
+                    statusText += `ODOMETER READING: ${data.mileage.toLocaleString()} MILES.`;
 
-                    // Add warnings if needed
+                    // Add robotic warnings if needed
                     if (data.batteryLevel < 20) {
-                        statusText += ` Warning: Battery level is low.`;
+                        statusText += ` ALERT: BATTERY CHARGE CRITICALLY LOW. IMMEDIATE ATTENTION REQUIRED.`;
                     }
                     if (data.fuelLevel < 15) {
-                        statusText += ` Warning: Fuel level is low.`;
+                        statusText += ` ALERT: FUEL RESERVES CRITICALLY LOW. REFUELING RECOMMENDED.`;
                     }
                     if (data.engineTemp > 210) {
-                        statusText += ` Warning: Engine temperature is high.`;
+                        statusText += ` WARNING: ENGINE THERMAL LEVELS ELEVATED. COOLING SYSTEM CHECK ADVISED.`;
                     }
+
+                    statusText += ` VEHICLE STATUS REPORT COMPLETE.`;
                 } else {
-                    statusText = `I'm currently in demo mode. Please connect your vehicle to get real-time status information. In demo mode, I'm showing simulated data: Battery at ${Math.round(data.batteryLevel)} percent, fuel at ${Math.round(data.fuelLevel)} percent, and engine temperature at ${Math.round(data.engineTemp)} degrees.`;
+                    statusText = `SYSTEM OPERATING IN DEMONSTRATION MODE. REAL VEHICLE CONNECTION NOT DETECTED. DISPLAYING SIMULATED DATA: BATTERY CHARGE ${Math.round(data.batteryLevel)} PERCENT. FUEL RESERVES ${Math.round(data.fuelLevel)} PERCENT. ENGINE THERMAL READING ${Math.round(data.engineTemp)} DEGREES. CONNECT VEHICLE FOR LIVE DATA TRANSMISSION.`;
                 }
 
                 return statusText;
@@ -2771,13 +2818,13 @@
 
                 if (lowerCommand.includes('start') && (lowerCommand.includes('car') || lowerCommand.includes('engine'))) {
                     const response = carDataManager.startEngine();
-                    return response.replace(/🚗|🛑|📊/g, ''); // Remove emojis for speech
+                    return "COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE. ENGINE ACTIVATION COMPLETE.";
                 }
 
                 if ((lowerCommand.includes('stop') || lowerCommand.includes('turn off')) &&
                     (lowerCommand.includes('car') || lowerCommand.includes('engine'))) {
                     const response = carDataManager.stopEngine();
-                    return response.replace(/🚗|🛑|📊/g, '');
+                    return "COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE. ENGINE DEACTIVATION COMPLETE.";
                 }
 
                 if (lowerCommand.includes('status') || lowerCommand.includes('check')) {
@@ -2785,15 +2832,25 @@
                 }
 
                 if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
-                    return "Hello! I'm your car's AI assistant. I can help you start or stop your engine, and check your vehicle status. What would you like me to do?";
+                    return "GREETINGS, HUMAN. I AM YOUR AUTOMOTIVE AI ASSISTANT. MY FUNCTIONS INCLUDE ENGINE CONTROL AND VEHICLE STATUS MONITORING. AWAITING YOUR COMMANDS.";
                 }
 
                 if (lowerCommand.includes('help')) {
-                    return "I can help you with the following commands: Start my car, Stop my car, Check car status, or ask for help. You can also ask me about specific vehicle information like battery level or fuel status.";
+                    return "AVAILABLE COMMANDS: ENGINE START, ENGINE STOP, VEHICLE STATUS CHECK, BATTERY LEVEL INQUIRY, FUEL LEVEL INQUIRY. SPEAK CLEARLY FOR OPTIMAL COMMAND RECOGNITION.";
+                }
+
+                if (lowerCommand.includes('battery')) {
+                    const batteryLevel = Math.round(carDataManager.realTimeData.batteryLevel);
+                    return `BATTERY CHARGE LEVEL: ${batteryLevel} PERCENT. ${batteryLevel < 20 ? 'CHARGE LEVEL CRITICALLY LOW.' : 'CHARGE LEVEL ACCEPTABLE.'}`;
+                }
+
+                if (lowerCommand.includes('fuel')) {
+                    const fuelLevel = Math.round(carDataManager.realTimeData.fuelLevel);
+                    return `FUEL RESERVES: ${fuelLevel} PERCENT. ${fuelLevel < 15 ? 'FUEL LEVEL CRITICALLY LOW. REFUELING RECOMMENDED.' : 'FUEL LEVEL ACCEPTABLE.'}`;
                 }
 
                 // Default response
-                return "I'm sorry, I didn't understand that command. You can say things like 'start my car', 'stop my car', or 'check car status'. Say 'help' for more options.";
+                return "COMMAND NOT RECOGNIZED. PLEASE REPEAT COMMAND OR SAY HELP FOR AVAILABLE FUNCTIONS. ACCEPTABLE COMMANDS INCLUDE: START ENGINE, STOP ENGINE, CHECK STATUS.";
             }
         }
 
@@ -2825,7 +2882,7 @@
 
             try {
                 // AI greeting
-                await aiVoice.speak("Hello! I'm listening for your command.");
+                await aiVoice.speak("AUTOMOTIVE AI SYSTEM ACTIVATED. AWAITING VOICE COMMAND INPUT.");
 
                 setTimeout(async () => {
                     const randomIndex = Math.floor(Math.random() * demoCommands.length);
@@ -2834,7 +2891,7 @@
                     statusEl.style.color = '#34a853';
 
                     // AI acknowledges the command
-                    await aiVoice.speak("I heard you say: " + command.replace('Hey Google, ', ''));
+                    await aiVoice.speak("VOICE COMMAND DETECTED: " + command.replace('Hey Google, ', '').toUpperCase());
 
                     setTimeout(async () => {
                         let response;
@@ -2842,10 +2899,10 @@
                         // Process the command
                         if (command.includes('start')) {
                             response = carDataManager.startEngine();
-                            await aiVoice.speak("Starting your car engine now. Please wait.");
+                            await aiVoice.speak("COMMAND RECEIVED. INITIATING ENGINE START SEQUENCE.");
                         } else if (command.includes('turn off') || command.includes('stop')) {
                             response = carDataManager.stopEngine();
-                            await aiVoice.speak("Turning off your car engine. Engine stopped safely.");
+                            await aiVoice.speak("COMMAND RECEIVED. INITIATING ENGINE SHUTDOWN SEQUENCE.");
                         } else if (command.includes('status') || command.includes('check')) {
                             response = carDataManager.getCarStatus();
                             const speechText = await aiVoice.getCarStatusSpeech();
@@ -2853,11 +2910,11 @@
                         } else if (command.includes('battery')) {
                             const batteryLevel = Math.round(carDataManager.realTimeData.batteryLevel);
                             response = `Battery level: ${batteryLevel}%`;
-                            await aiVoice.speak(`Your battery level is currently at ${batteryLevel} percent.`);
+                            await aiVoice.speak(`BATTERY CHARGE LEVEL: ${batteryLevel} PERCENT.`);
                         } else if (command.includes('fuel')) {
                             const fuelLevel = Math.round(carDataManager.realTimeData.fuelLevel);
                             response = `Fuel level: ${fuelLevel}%`;
-                            await aiVoice.speak(`Your fuel level is currently at ${fuelLevel} percent.`);
+                            await aiVoice.speak(`FUEL RESERVES: ${fuelLevel} PERCENT.`);
                         }
 
                         statusEl.textContent = response;
@@ -2874,7 +2931,7 @@
                             demoActive = false;
 
                             // AI closing message
-                            await aiVoice.speak("Is there anything else I can help you with?");
+                            await aiVoice.speak("COMMAND SEQUENCE COMPLETE. AWAITING FURTHER INSTRUCTIONS.");
                         }, 3000);
                     }, 2000);
                 }, 2000);
@@ -2903,7 +2960,7 @@
             statusEl.style.color = '#4285f4';
 
             try {
-                await aiVoice.speak("Hello! I'm ready to listen. Please speak your command.");
+                await aiVoice.speak("VOICE RECOGNITION SYSTEM ONLINE. SPEAK YOUR COMMAND NOW.");
 
                 const command = await aiVoice.listen();
                 statusEl.textContent = `You said: "${command}"`;
@@ -2925,7 +2982,7 @@
 
             } catch (error) {
                 console.error('Voice recognition error:', error);
-                await aiVoice.speak("Sorry, I couldn't hear you clearly. Please try again.");
+                await aiVoice.speak("VOICE INPUT ERROR DETECTED. PLEASE REPEAT COMMAND.");
                 statusEl.textContent = 'Voice recognition error. Please try again.';
                 statusEl.style.color = '#ea4335';
                 button.textContent = '🎤 Start Voice Demo';
