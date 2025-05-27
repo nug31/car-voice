@@ -279,167 +279,7 @@
             text-align: center;
         }
 
-        /* Video Section */
-        .videos {
-            padding: 100px 0;
-            background: rgba(234, 67, 53, 0.1);
-        }
 
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .video-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: transform 0.15s ease;
-        }
-
-        .video-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .video-player {
-            width: 100%;
-            height: 200px;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .video-player video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .video-placeholder {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #1a1a2e, #16213e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 3rem;
-        }
-
-        .video-info {
-            padding: 1.5rem;
-        }
-
-        .video-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #4285f4;
-        }
-
-        .video-description {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        /* Video Upload Section */
-        .video-upload {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            margin-bottom: 3rem;
-        }
-
-        .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            padding: 3rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .upload-area:hover {
-            border-color: #4285f4;
-            background: rgba(66, 133, 244, 0.1);
-        }
-
-        .upload-area.dragover {
-            border-color: #34a853;
-            background: rgba(52, 168, 83, 0.1);
-        }
-
-        .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #4285f4;
-        }
-
-        .upload-text {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-        }
-
-        .upload-hint {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-button {
-            background: linear-gradient(45deg, #4285f4, #34a853);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.15s ease;
-            margin-top: 1rem;
-        }
-
-        .upload-button:hover {
-            transform: translateY(-1px);
-        }
-
-        /* Video Controls */
-        .video-controls {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .control-button {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-size: 0.9rem;
-        }
-
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .control-button.active {
-            background: #4285f4;
-            border-color: #4285f4;
-        }
 
         /* Car Setup Section */
         .car-setup {
@@ -1457,7 +1297,7 @@
             }
 
             /* Sections */
-            .features, .how-it-works, .demo, .car-setup, .dashboard, .videos {
+            .features, .how-it-works, .demo, .car-setup, .dashboard {
                 padding: 60px 0;
             }
 
@@ -1529,23 +1369,7 @@
                 font-size: 1.8rem;
             }
 
-            /* Video Section */
-            .video-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
 
-            .video-upload {
-                padding: 1.5rem;
-            }
-
-            .upload-area {
-                padding: 2rem 1rem;
-            }
-
-            .upload-icon {
-                font-size: 2rem;
-            }
 
             /* Setup Cards */
             .setup-card {
@@ -1649,31 +1473,20 @@
                 font-size: 0.9rem;
             }
 
-            /* Video controls */
-            .video-controls {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
 
-            .control-button {
-                width: 100%;
-                text-align: center;
-            }
         }
 
         /* Touch-friendly improvements */
         @media (hover: none) and (pointer: coarse) {
             .feature-card:hover,
             .setup-card:hover,
-            .metric-card:hover,
-            .video-card:hover {
+            .metric-card:hover {
                 transform: none;
             }
 
             .cta-button:hover,
             .demo-button:hover,
-            .connect-button:hover,
-            .upload-button:hover {
+            .connect-button:hover {
                 transform: none;
             }
 
@@ -1684,9 +1497,7 @@
             /* Larger touch targets */
             .demo-button,
             .cta-button,
-            .connect-button,
-            .upload-button,
-            .control-button {
+            .connect-button {
                 min-height: 44px;
                 min-width: 44px;
             }
@@ -1708,7 +1519,7 @@
                 font-size: 2.2rem;
             }
 
-            .features, .how-it-works, .demo, .car-setup, .dashboard, .videos {
+            .features, .how-it-works, .demo, .car-setup, .dashboard {
                 padding: 40px 0;
             }
         }
@@ -1725,7 +1536,6 @@
                 <li><a href="#home" onclick="closeMobileMenu()">🏠 Home</a></li>
                 <li><a href="#features" onclick="closeMobileMenu()">⭐ Features</a></li>
                 <li><a href="#how-it-works" onclick="closeMobileMenu()">⚙️ How It Works</a></li>
-                <li><a href="#videos" onclick="closeMobileMenu()">🎥 Videos</a></li>
                 <li><a href="#setup" onclick="closeMobileMenu()">🔧 Setup</a></li>
                 <li><a href="#dashboard" onclick="closeMobileMenu()">📊 Dashboard</a></li>
                 <li><a href="#demo" onclick="closeMobileMenu()">🎤 Demo</a></li>
@@ -1815,97 +1625,7 @@
         </div>
     </section>
 
-    <section id="videos" class="videos">
-        <div class="container">
-            <h2>Car Voice Videos</h2>
-            <p>Upload and watch videos about car voice systems, demonstrations, and tutorials</p>
 
-            <!-- Video Upload Section -->
-            <div class="video-upload">
-                <h3>📹 Upload Your Car Voice Video</h3>
-                <div class="upload-area" onclick="document.getElementById('videoFile').click()">
-                    <div class="upload-icon">🎬</div>
-                    <div class="upload-text">Click to upload or drag and drop your video</div>
-                    <div class="upload-hint">Supports MP4, WebM, AVI (Max 100MB)</div>
-                    <input type="file" id="videoFile" class="file-input" accept="video/*" onchange="handleVideoUpload(event)">
-                    <button class="upload-button" onclick="document.getElementById('videoFile').click()">Choose Video File</button>
-                </div>
-                <div id="uploadProgress" style="display: none; margin-top: 1rem;">
-                    <div style="background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
-                        <div id="progressBar" style="height: 20px; background: linear-gradient(45deg, #4285f4, #34a853); width: 0%; transition: width 0.3s ease;"></div>
-                    </div>
-                    <div id="progressText" style="text-align: center; margin-top: 0.5rem; color: rgba(255,255,255,0.8);"></div>
-                </div>
-            </div>
-
-            <!-- Video Gallery -->
-            <div class="video-grid" id="videoGrid">
-                <!-- Demo Video 1 -->
-                <div class="video-card">
-                    <div class="video-player">
-                        <div class="video-placeholder">🎥</div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">Car Voice System Demo</div>
-                        <div class="video-description">Complete demonstration of voice commands for car control including navigation, climate, and entertainment systems.</div>
-                        <div class="video-controls">
-                            <button class="control-button">▶️ Play</button>
-                            <button class="control-button">📱 Share</button>
-                            <button class="control-button">💾 Download</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Demo Video 2 -->
-                <div class="video-card">
-                    <div class="video-player">
-                        <div class="video-placeholder">🚗</div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">OBD-II Voice Integration</div>
-                        <div class="video-description">Learn how to connect your voice system with OBD-II port for real-time vehicle diagnostics and voice feedback.</div>
-                        <div class="video-controls">
-                            <button class="control-button">▶️ Play</button>
-                            <button class="control-button">📱 Share</button>
-                            <button class="control-button">💾 Download</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Demo Video 3 -->
-                <div class="video-card">
-                    <div class="video-player">
-                        <div class="video-placeholder">🔧</div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">Installation Tutorial</div>
-                        <div class="video-description">Step-by-step guide to install and configure the Car Contact Voice system in your vehicle.</div>
-                        <div class="video-controls">
-                            <button class="control-button">▶️ Play</button>
-                            <button class="control-button">📱 Share</button>
-                            <button class="control-button">💾 Download</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Demo Video 4 -->
-                <div class="video-card">
-                    <div class="video-player">
-                        <div class="video-placeholder">🎤</div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">Voice Commands Guide</div>
-                        <div class="video-description">Complete list of voice commands and how to use them effectively for hands-free car control.</div>
-                        <div class="video-controls">
-                            <button class="control-button">▶️ Play</button>
-                            <button class="control-button">📱 Share</button>
-                            <button class="control-button">💾 Download</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <section id="setup" class="car-setup">
         <div class="container">
