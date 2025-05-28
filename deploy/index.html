@@ -3784,8 +3784,8 @@
             statusEl.textContent = '🎤 AI speaking...';
             statusEl.style.color = '#4285f4';
 
-            // First, AI greets the user
-            aiVoice.speakRobotic("HELLO I'M CAR VOICE, NEED TO HELP?").then(() => {
+            // First, AI greets the user with male robot voice
+            aiVoice.speakRobotic("Hello I'm Car Voice, need to help?").then(() => {
                 // After greeting, start listening for commands
                 statusEl.textContent = '🎧 Listening for voice commands... Speak now!';
                 statusEl.style.color = '#ea4335';
