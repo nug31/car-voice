@@ -2710,28 +2710,66 @@
         // Display Bluetooth Device in List
         function displayBluetoothDevice(device) {
             const devicesListEl = document.getElementById('bluetoothDevicesList');
-            const deviceName = device.name || 'Unknown Device';
+            let deviceName = device.name || 'Unknown Device';
             const deviceId = device.id || 'Unknown ID';
+
+            // Try to identify device type from MAC address or ID patterns
+            let deviceType = '📱';
+            let suggestedName = deviceName;
+
+            if (deviceName === 'Unknown Device' || deviceName.includes('Unknown')) {
+                // Try to guess device type from MAC address patterns
+                const macAddress = deviceId.replace(/[()]/g, '');
+
+                // Common OBD device MAC patterns
+                if (macAddress.includes('00:1D:A5') || macAddress.includes('00:04:3E') ||
+                    macAddress.includes('20:15:03') || macAddress.includes('00:0D:18')) {
+                    deviceType = '🚗';
+                    suggestedName = 'OBD-II Device';
+                } else if (macAddress.includes('98:D3:') || macAddress.includes('30:14:') ||
+                          macAddress.includes('24:0A:') || macAddress.includes('A4:C1:')) {
+                    deviceType = '🚗';
+                    suggestedName = 'ELM327 OBD';
+                } else if (macAddress.includes('HC-') || deviceId.includes('HC')) {
+                    deviceType = '🔗';
+                    suggestedName = 'HC Bluetooth Module';
+                } else if (macAddress.includes('ESP32') || deviceId.includes('ESP')) {
+                    deviceType = '⚡';
+                    suggestedName = 'ESP32 Device';
+                } else {
+                    deviceType = '📡';
+                    suggestedName = 'Bluetooth Device';
+                }
+            } else if (deviceName.toLowerCase().includes('obd') ||
+                      deviceName.toLowerCase().includes('elm') ||
+                      deviceName.toLowerCase().includes('car')) {
+                deviceType = '🚗';
+            }
 
             devicesListEl.innerHTML = `
                 <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.2);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: bold; color: #4285f4; margin-bottom: 5px;">
-                                📱 ${deviceName}
+                                ${deviceType} ${suggestedName}
                             </div>
+                            ${deviceName !== suggestedName ? `
+                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 3px;">
+                                    Original: ${deviceName}
+                                </div>
+                            ` : ''}
                             <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
-                                ID: ${deviceId}
+                                MAC: ${deviceId.replace(/[()]/g, '')}
                             </div>
                             <div style="font-size: 0.8rem; color: #34a853; margin-top: 5px;">
                                 ✅ Available for pairing
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <button type="button" onclick="pairBluetoothDevice('${deviceName}', '${deviceId}')" class="connect-button" style="background: linear-gradient(45deg, #4285f4, #34a853); padding: 8px 16px; font-size: 0.8rem;">
+                            <button type="button" onclick="pairBluetoothDevice('${suggestedName}', '${deviceId}')" class="connect-button" style="background: linear-gradient(45deg, #4285f4, #34a853); padding: 8px 16px; font-size: 0.8rem;">
                                 📱 Pair
                             </button>
-                            <button type="button" onclick="connectToBluetoothDevice('${deviceName}', '${deviceId}')" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); padding: 8px 16px; font-size: 0.8rem;">
+                            <button type="button" onclick="connectToBluetoothDevice('${suggestedName}', '${deviceId}')" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); padding: 8px 16px; font-size: 0.8rem;">
                                 🔗 Connect
                             </button>
                         </div>
