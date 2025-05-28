@@ -1708,10 +1708,18 @@
                             <!-- Available Bluetooth Devices List -->
                             <div id="bluetoothDevicesList" style="margin: 10px 0; max-height: 200px; overflow-y: auto;">
                                 <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
-                                    <div style="margin-bottom: 10px;">📡 Scanning for Bluetooth devices...</div>
-                                    <button type="button" onclick="scanBluetoothDevices()" class="connect-button" style="background: linear-gradient(45deg, #4285f4, #34a853); padding: 8px 16px; font-size: 0.9rem;">
-                                        🔍 Scan Devices
-                                    </button>
+                                    <div style="margin-bottom: 15px;">📡 Ready to scan for Bluetooth devices</div>
+                                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                        <button type="button" onclick="scanBluetoothDevices()" class="connect-button" style="background: linear-gradient(45deg, #4285f4, #34a853); padding: 8px 16px; font-size: 0.9rem;">
+                                            🔍 Scan All Devices
+                                        </button>
+                                        <button type="button" onclick="scanOBDDevices()" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); padding: 8px 16px; font-size: 0.9rem;">
+                                            🚗 Scan OBD Only
+                                        </button>
+                                    </div>
+                                    <div style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+                                        💡 Try "Scan All Devices" if OBD scan doesn't find your device
+                                    </div>
                                 </div>
                             </div>
 
@@ -2640,17 +2648,15 @@
                     throw new Error('Bluetooth not supported in this browser. Please use Chrome or Edge.');
                 }
 
-                // Request Bluetooth device with broader filters
+                // Request Bluetooth device with more flexible filters
                 const device = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { namePrefix: 'OBDII' },
-                        { namePrefix: 'ELM327' },
-                        { namePrefix: 'OBD' },
-                        { namePrefix: 'Bluetooth' },
-                        { namePrefix: 'HC-' },
-                        { namePrefix: 'ESP32' }
-                    ],
-                    optionalServices: ['0000fff0-0000-1000-8000-00805f9b34fb']
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        '0000fff0-0000-1000-8000-00805f9b34fb', // Common OBD service
+                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+                        '0000110a-0000-1000-8000-00805f9b34fb', // Audio Source
+                        '0000110b-0000-1000-8000-00805f9b34fb'  // Audio Sink
+                    ]
                 });
 
                 // Display found device
