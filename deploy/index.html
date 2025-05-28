@@ -1701,9 +1701,19 @@
                         </div>
                         <div class="form-group">
                             <label>Bluetooth OBD</label>
-                            <input type="text" id="obdAddress" placeholder="e.g., COM3 or 192.168.1.100">
+                            <div id="bluetoothStatus" style="padding: 10px; margin: 10px 0; border-radius: 8px; background: rgba(52, 168, 83, 0.1); border: 1px solid #34a853; color: #34a853; text-align: center;">
+                                🔵 Bluetooth Active
+                            </div>
+                            <input type="text" id="obdAddress" placeholder="Enter device name or leave empty for auto-discovery" style="margin-bottom: 10px;">
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button type="button" onclick="pairBluetoothDevice()" class="connect-button" style="background: linear-gradient(45deg, #4285f4, #34a853); flex: 1;">
+                                    📱 Pair Device
+                                </button>
+                                <button type="submit" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); flex: 1;">
+                                    🔗 Connect OBD
+                                </button>
+                            </div>
                         </div>
-                        <button type="submit" class="connect-button">Connect OBD-II</button>
                     </form>
                     <div id="obdStatus" class="connection-status status-disconnected">
                         Not Connected
@@ -2595,6 +2605,83 @@
             }
 
             await carDataManager.connectSmartcarAPI(apiKey, vehicleId);
+        }
+
+        // Bluetooth Pairing Function
+        async function pairBluetoothDevice() {
+            const statusEl = document.getElementById('bluetoothStatus');
+            const obdStatusEl = document.getElementById('obdStatus');
+
+            try {
+                statusEl.innerHTML = '🔄 Searching for devices...';
+                statusEl.style.background = 'rgba(255, 152, 0, 0.1)';
+                statusEl.style.borderColor = '#ff9800';
+                statusEl.style.color = '#ff9800';
+
+                // Check if Web Bluetooth is supported
+                if (!('bluetooth' in navigator)) {
+                    throw new Error('Bluetooth not supported in this browser. Please use Chrome or Edge.');
+                }
+
+                // Request Bluetooth device
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { namePrefix: 'OBDII' },
+                        { namePrefix: 'ELM327' },
+                        { namePrefix: 'OBD' },
+                        { namePrefix: 'Bluetooth' }
+                    ],
+                    optionalServices: ['0000fff0-0000-1000-8000-00805f9b34fb']
+                });
+
+                // Update status to show paired device
+                statusEl.innerHTML = `✅ Paired: ${device.name || 'OBD Device'}`;
+                statusEl.style.background = 'rgba(52, 168, 83, 0.1)';
+                statusEl.style.borderColor = '#34a853';
+                statusEl.style.color = '#34a853';
+
+                // Update the input field with device name
+                document.getElementById('obdAddress').value = device.name || device.id;
+
+                // Update OBD status
+                obdStatusEl.textContent = 'Device Paired - Ready to Connect';
+                obdStatusEl.className = 'connection-status status-connecting';
+
+                console.log('Bluetooth device paired:', device.name);
+
+                // Optional: Speak confirmation
+                if (typeof speak === 'function') {
+                    speak(`Bluetooth device ${device.name || 'OBD adapter'} paired successfully. You can now connect.`);
+                }
+
+            } catch (error) {
+                console.error('Bluetooth pairing failed:', error);
+
+                statusEl.innerHTML = '❌ Pairing Failed';
+                statusEl.style.background = 'rgba(244, 67, 54, 0.1)';
+                statusEl.style.borderColor = '#f44336';
+                statusEl.style.color = '#f44336';
+
+                // Show specific error message
+                let errorMessage = 'Pairing failed. ';
+                if (error.message.includes('not supported')) {
+                    errorMessage += 'Please use Chrome or Edge browser.';
+                } else if (error.message.includes('User cancelled')) {
+                    errorMessage += 'Device selection was cancelled.';
+                } else {
+                    errorMessage += 'Please ensure your OBD device is in pairing mode.';
+                }
+
+                alert(errorMessage);
+
+                // Reset status after 3 seconds
+                setTimeout(() => {
+                    statusEl.innerHTML = '🔵 Bluetooth Active';
+                    statusEl.style.background = 'rgba(52, 168, 83, 0.1)';
+                    statusEl.style.borderColor = '#34a853';
+                    statusEl.style.color = '#34a853';
+                }, 3000);
+            }
         }
 
         // Simple Car Control Functions - NOW WITH VOICE
