@@ -2605,6 +2605,13 @@
                 }
 
                 console.log('📤 Sending OBD command to REAL car:', command);
+                console.log('🔍 Connection Status:', {
+                    connected: this.connected,
+                    realMode: this.realMode,
+                    hasCharacteristic: !!this.characteristic,
+                    hasPort: !!this.port,
+                    deviceConnected: this.device?.gatt?.connected
+                });
 
                 // If not in real mode, return demo data that shows engine is OFF
                 if (!this.realMode) {
@@ -2622,6 +2629,8 @@
                             return '41 2F 80'; // 50%
                         case '0142': // Control Module Voltage - battery only
                             return '41 42 30 D4'; // ~12.5V
+                        case '0100': // Supported PIDs test
+                            return '41 00 BE 1F A8 13'; // Standard supported PIDs
                         default:
                             return 'NO DATA';
                     }
@@ -2666,10 +2675,16 @@
 
             async getEngineRPM() {
                 try {
+                    console.log('🚗 Requesting RPM data from car ECU...');
                     const response = await this.sendCommand('010C');
-                    return this.parseRPM(response);
+                    console.log('📥 RPM response from car:', response);
+
+                    const rpm = this.parseRPM(response);
+                    console.log('🔧 Parsed RPM value:', rpm);
+
+                    return rpm;
                 } catch (error) {
-                    console.error('Error getting RPM:', error);
+                    console.error('❌ Error getting RPM from car:', error);
                     return 0;
                 }
             }
@@ -2945,9 +2960,19 @@
 
                 try {
                     console.log('📊 Reading REAL OBD data from car...');
+                    console.log('🔍 OBD Reader Status:', {
+                        connected: this.obdReader.connected,
+                        realMode: this.obdReader.realMode,
+                        hasCharacteristic: !!this.obdReader.characteristic,
+                        hasPort: !!this.obdReader.port,
+                        deviceName: this.obdReader.device?.name || 'Unknown'
+                    });
 
                     // Test connection first
+                    console.log('🧪 Testing OBD connection with supported PIDs command...');
                     const testResponse = await this.obdReader.sendCommand('0100'); // Supported PIDs test
+                    console.log('📥 Test response:', testResponse);
+
                     if (testResponse === 'NO DATA' || testResponse.includes('ERROR')) {
                         console.log('⚠️ OBD connection test failed, falling back to simulation');
                         this.simulateRealTimeData();
@@ -2957,6 +2982,7 @@
                     console.log('✅ OBD connection test passed, reading real data...');
 
                     // Read real OBD data from your car
+                    console.log('📊 Reading individual car parameters...');
                     const rpm = await this.obdReader.getEngineRPM();
                     const speed = await this.obdReader.getVehicleSpeed();
                     const temp = await this.obdReader.getCoolantTemp();
