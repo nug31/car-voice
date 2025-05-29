@@ -1735,11 +1735,15 @@
                                     🔌 USB Serial
                                 </button>
                             </div>
-                            <div style="margin-top: 10px; text-align: center;">
-                                <button type="button" onclick="testRealDataReading()" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); padding: 8px 16px; font-size: 0.9rem;">
-                                    🔍 Test Real Data Reading
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                                <button type="button" class="connect-button" onclick="forceRealOBDConnection()" style="background: linear-gradient(135deg, #ff6b35, #f7931e); font-weight: bold; flex: 1; min-width: 140px;">
+                                    🚗 Force Real OBD
+                                </button>
+                                <button type="button" class="connect-button" onclick="testRealDataReading()" style="background: linear-gradient(45deg, #34a853, #4caf50); flex: 1; min-width: 120px;">
+                                    🧪 Test Connection
                                 </button>
                             </div>
+
                         </div>
                     </form>
                     <div id="obdStatus" class="connection-status status-disconnected">
@@ -3205,30 +3209,48 @@
 
                 if (!carDataManager.obdReader) {
                     console.log('❌ No OBD reader available - please connect first');
-                    alert('Please connect to an OBD device first using "📱 Manual Select"');
+                    alert('⚠️ No OBD device connected!\n\nTo read REAL car data:\n1. Connect OBD device to your car\n2. Click "📱 Manual Select" to connect\n3. Then test again');
                     return;
                 }
 
-                console.log('🔍 OBD Reader Status Check:', {
+                console.log('🔍 DETAILED OBD Reader Status Check:');
+                console.log('📊 Connection Status:', {
                     connected: carDataManager.obdReader.connected,
                     realMode: carDataManager.obdReader.realMode,
                     hasCharacteristic: !!carDataManager.obdReader.characteristic,
                     hasPort: !!carDataManager.obdReader.port,
-                    deviceName: carDataManager.obdReader.device?.name || 'Unknown'
+                    deviceName: carDataManager.obdReader.device?.name || 'Unknown',
+                    deviceId: carDataManager.obdReader.device?.id || 'Unknown'
                 });
+
+                // Show current connection mode
+                if (carDataManager.obdReader.realMode) {
+                    console.log('🟢 REAL MODE: Connected to actual OBD device');
+                    alert('🟢 REAL MODE DETECTED!\nReading actual car data from OBD device...');
+                } else {
+                    console.log('🟡 DEMO MODE: Using simulated data');
+                    alert('🟡 DEMO MODE DETECTED!\nNo real OBD device found.\n\nTo get real car data:\n1. Connect OBD adapter to your car\n2. Use "📱 Manual Select" to connect\n3. Make sure car engine is running');
+                }
 
                 // Test based on the mode
                 if (carDataManager.obdReader.realMode) {
                     console.log('🧪 MANUAL TEST: Testing REAL OBD communication...');
+                    console.log('🚗 Attempting to read REAL data from your car...');
+
+                    // Force real data reading
                     await carDataManager.readRealOBDData();
+
                     console.log('✅ MANUAL TEST: Real OBD data reading completed');
+                    console.log('📊 Current Real-Time Data:', carDataManager.realTimeData);
+
+                    alert(`✅ REAL CAR DATA READ!\n\nRPM: ${Math.round(carDataManager.realTimeData.engineRPM)}\nSpeed: ${Math.round(carDataManager.realTimeData.vehicleSpeed)} mph\nTemp: ${Math.round(carDataManager.realTimeData.engineTemp)}°F\nFuel: ${Math.round(carDataManager.realTimeData.fuelLevel)}%`);
                 } else {
                     console.log('🧪 MANUAL TEST: Testing DEMO mode communication...');
                     await carDataManager.readRealOBDData();
                     console.log('✅ MANUAL TEST: Demo data reading completed');
-                }
 
-                alert('✅ Test completed! Check console for detailed results.');
+                    alert('✅ Demo test completed!\nShowing simulated car data.\n\nConnect a real OBD device to see actual car data.');
+                }
 
             } catch (error) {
                 console.error('❌ MANUAL TEST: Error during data reading:', error);
@@ -3236,13 +3258,138 @@
             }
         }
 
-        // Make function globally accessible for debugging
+        // Force Real OBD Connection Function
+        async function forceRealOBDConnection() {
+            try {
+                console.log('🔧 FORCE REAL OBD: Attempting to connect to real OBD device...');
+                alert('🔧 Attempting to connect to REAL OBD device...\n\nMake sure:\n1. OBD adapter is plugged into your car\n2. Car engine is running\n3. OBD device is paired with your computer');
+
+                // Try USB/Serial connection first
+                if (navigator.serial) {
+                    try {
+                        console.log('🔌 Trying USB/Serial OBD connection...');
+                        const obdReader = new OBDReader();
+
+                        // Request serial port directly
+                        obdReader.port = await navigator.serial.requestPort();
+                        await obdReader.port.open({ baudRate: 38400 });
+
+                        console.log('✅ Serial port opened successfully');
+
+                        // Set up the connection
+                        obdReader.connected = true;
+                        obdReader.realMode = true;
+
+                        // Initialize OBD protocol
+                        await obdReader.initializeOBD();
+
+                        // Connect using the serial connection
+                        carDataManager.obdReader = obdReader;
+                        carDataManager.connections.obd.connected = true;
+                        carDataManager.connections.obd.device = 'USB Serial OBD';
+
+                        // Update status
+                        const statusEl = document.getElementById('obdStatus');
+                        statusEl.textContent = '🟢 REAL OBD DATA - USB Serial Connected';
+                        statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                        statusEl.style.color = '#34a853';
+                        statusEl.style.fontWeight = 'bold';
+
+                        console.log('✅ REAL OBD USB connection established!');
+                        alert('✅ REAL OBD USB CONNECTION SUCCESSFUL!\n\nYour car data will now be read from the actual OBD device.\n\nClick the test button to verify!');
+
+                        // Start real data reading
+                        carDataManager.startRealOBDDataReading();
+
+                        return true;
+
+                    } catch (serialError) {
+                        console.log('⚠️ USB/Serial connection failed:', serialError);
+                    }
+                }
+
+                // Try Bluetooth connection
+                if (navigator.bluetooth) {
+                    try {
+                        console.log('📱 Trying Bluetooth OBD connection...');
+
+                        const device = await navigator.bluetooth.requestDevice({
+                            filters: [
+                                { namePrefix: 'OBDII' },
+                                { namePrefix: 'ELM327' },
+                                { namePrefix: 'OBD' },
+                                { namePrefix: 'obd' },
+                                { namePrefix: 'elm' },
+                                { namePrefix: 'Elm' },
+                                { namePrefix: 'ELM' },
+                                { namePrefix: 'HC-05' },
+                                { namePrefix: 'HC-06' },
+                                { namePrefix: 'ESP32' }
+                            ],
+                            optionalServices: [
+                                '0000fff0-0000-1000-8000-00805f9b34fb',
+                                '00001101-0000-1000-8000-00805f9b34fb'
+                            ]
+                        });
+
+                        console.log('📱 Bluetooth device selected:', device.name);
+
+                        const obdReader = new OBDReader();
+                        const connected = await obdReader.connectWebBluetooth(device.name);
+
+                        if (connected && obdReader.realMode) {
+                            carDataManager.obdReader = obdReader;
+                            carDataManager.connections.obd.connected = true;
+                            carDataManager.connections.obd.device = device.name;
+
+                            // Update status
+                            const statusEl = document.getElementById('obdStatus');
+                            statusEl.textContent = `🟢 REAL OBD DATA - ${device.name} Connected`;
+                            statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                            statusEl.style.color = '#34a853';
+                            statusEl.style.fontWeight = 'bold';
+
+                            console.log('✅ REAL OBD Bluetooth connection established!');
+                            alert(`✅ REAL OBD BLUETOOTH CONNECTION SUCCESSFUL!\n\nConnected to: ${device.name}\n\nYour car data will now be read from the actual OBD device.\n\nClick the test button to verify!`);
+
+                            // Start real data reading
+                            carDataManager.startRealOBDDataReading();
+
+                            return true;
+                        }
+
+                    } catch (bluetoothError) {
+                        console.log('⚠️ Bluetooth connection failed:', bluetoothError);
+                    }
+                }
+
+                alert('❌ Could not establish real OBD connection.\n\nPossible issues:\n1. No OBD device connected to car\n2. OBD device not paired\n3. Car engine not running\n4. Browser doesn\'t support Web Serial/Bluetooth');
+                return false;
+
+            } catch (error) {
+                console.error('❌ Force real OBD connection failed:', error);
+                alert('❌ Error connecting to real OBD device: ' + error.message);
+                return false;
+            }
+        }
+
+        // Make functions globally accessible for debugging
         window.testRealDataReading = testRealDataReading;
+        window.forceRealOBDConnection = forceRealOBDConnection;
 
         // Debug: Log when script loads
         console.log('🚗 Car Voice App loaded successfully');
         console.log('🔧 testRealDataReading function available:', typeof testRealDataReading);
+        console.log('🔧 forceRealOBDConnection function available:', typeof forceRealOBDConnection);
         console.log('🔧 carDataManager initialized:', !!carDataManager);
+        console.log('');
+        console.log('🚗 TO CONNECT TO YOUR REAL CAR:');
+        console.log('1. Make sure OBD adapter is plugged into your car');
+        console.log('2. Turn on your car engine');
+        console.log('3. Click "📱 Manual Select" button');
+        console.log('4. Select your OBD device from the list');
+        console.log('5. Click the test button to verify real data');
+        console.log('');
 
         // Video Upload and Management System
         class VideoManager {
