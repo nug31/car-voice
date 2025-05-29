@@ -2339,8 +2339,12 @@
                     if (!serviceFound) {
                         console.log('⚠️ No standard OBD communication channel found');
                         console.log('💡 Device connected but may not be a standard OBD adapter');
-                        console.log('🔄 Will attempt basic communication anyway...');
-                        // Don't return false - we can still try basic communication
+                        console.log('🔄 Switching to demo mode for this device...');
+
+                        // If no proper OBD communication found, switch to demo mode
+                        this.realMode = false;
+                        console.log('📱 Device connected in demo mode - will show simulated data');
+
                     } else {
                         // Initialize OBD protocol only if we found proper services
                         console.log('🔧 Initializing OBD protocol...');
@@ -2348,7 +2352,8 @@
                             await this.initializeOBD();
                             console.log('✅ OBD protocol initialized successfully');
                         } catch (initError) {
-                            console.log('⚠️ OBD initialization failed, but continuing with basic mode');
+                            console.log('⚠️ OBD initialization failed, switching to demo mode');
+                            this.realMode = false;
                         }
                     }
 
@@ -2494,31 +2499,7 @@
                 });
             }
 
-            async sendRawCommand(command) {
-                if (!this.characteristic) {
-                    throw new Error('OBD characteristic not available');
-                }
 
-                console.log('📤 Sending raw command:', command);
-
-                // Convert command to bytes
-                const encoder = new TextEncoder();
-                const commandBytes = encoder.encode(command);
-
-                // Send command to OBD device
-                await this.characteristic.writeValue(commandBytes);
-
-                // Wait for response
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Read response
-                const response = await this.characteristic.readValue();
-                const decoder = new TextDecoder();
-                const responseText = decoder.decode(response);
-
-                console.log('📥 Raw response:', responseText);
-                return responseText.trim();
-            }
 
             // Queue-based command sending to prevent GATT conflicts
             async sendRawCommand(command) {
@@ -2577,10 +2558,18 @@
 
             async executeRawCommand(command) {
                 console.log('📤 Executing real OBD command:', command);
+                console.log('🔍 Communication Status Check:', {
+                    hasPort: !!this.port,
+                    hasCharacteristic: !!this.characteristic,
+                    realMode: this.realMode,
+                    connected: this.connected,
+                    deviceConnected: this.device?.gatt?.connected
+                });
 
                 try {
                     if (this.port) {
                         // Serial communication for USB OBD adapters
+                        console.log('🔌 Using Serial communication...');
                         const writer = this.port.writable.getWriter();
                         const reader = this.port.readable.getReader();
 
@@ -2606,6 +2595,14 @@
 
                     } else if (this.characteristic) {
                         // Bluetooth communication for Bluetooth OBD adapters
+                        console.log('📱 Using Bluetooth communication...');
+                        console.log('🔍 Characteristic properties:', {
+                            read: this.characteristic.properties.read,
+                            write: this.characteristic.properties.write,
+                            writeWithoutResponse: this.characteristic.properties.writeWithoutResponse,
+                            notify: this.characteristic.properties.notify
+                        });
+
                         const encoder = new TextEncoder();
                         const commandWithCR = command + '\r';
                         const commandBytes = encoder.encode(commandWithCR);
@@ -2643,7 +2640,18 @@
                         }
                     }
 
-                    throw new Error('No real OBD communication method available');
+                    // Enhanced error message with debugging info
+                    const errorDetails = {
+                        hasPort: !!this.port,
+                        hasCharacteristic: !!this.characteristic,
+                        realMode: this.realMode,
+                        connected: this.connected,
+                        deviceName: this.device?.name || 'Unknown',
+                        deviceConnected: this.device?.gatt?.connected
+                    };
+
+                    console.error('❌ No communication method available. Debug info:', errorDetails);
+                    throw new Error(`No real OBD communication method available. Debug: ${JSON.stringify(errorDetails)}`);
 
                 } catch (error) {
                     console.error('❌ Error executing real OBD command:', error);
@@ -3184,7 +3192,7 @@
         async function testRealDataReading() {
             try {
                 console.log('🔍 MANUAL TEST: Function called successfully!');
-                console.log('🔍 MANUAL TEST: Testing real data reading...');
+                console.log('🔍 MANUAL TEST: Testing data reading...');
 
                 // Add visual feedback
                 alert('🔍 Test button clicked! Check console for detailed logs.');
@@ -3209,12 +3217,21 @@
                     deviceName: carDataManager.obdReader.device?.name || 'Unknown'
                 });
 
-                console.log('🧪 MANUAL TEST: Calling readRealOBDData...');
-                await carDataManager.readRealOBDData();
-                console.log('✅ MANUAL TEST: Real data reading completed');
+                // Test based on the mode
+                if (carDataManager.obdReader.realMode) {
+                    console.log('🧪 MANUAL TEST: Testing REAL OBD communication...');
+                    await carDataManager.readRealOBDData();
+                    console.log('✅ MANUAL TEST: Real OBD data reading completed');
+                } else {
+                    console.log('🧪 MANUAL TEST: Testing DEMO mode communication...');
+                    await carDataManager.readRealOBDData();
+                    console.log('✅ MANUAL TEST: Demo data reading completed');
+                }
+
+                alert('✅ Test completed! Check console for detailed results.');
 
             } catch (error) {
-                console.error('❌ MANUAL TEST: Error during real data reading:', error);
+                console.error('❌ MANUAL TEST: Error during data reading:', error);
                 alert('❌ Error: ' + error.message);
             }
         }
