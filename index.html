@@ -2230,19 +2230,36 @@
                             for (const charUUID of characteristicUUIDs) {
                                 try {
                                     console.log(`🔍 Trying characteristic UUID: ${charUUID}`);
-                                    this.characteristic = await this.service.getCharacteristic(charUUID);
-                                    console.log('✅ Found OBD characteristic');
-                                    serviceFound = true;
-                                    break;
+                                    const characteristic = await this.service.getCharacteristic(charUUID);
+
+                                    // Check characteristic properties
+                                    const properties = characteristic.properties;
+                                    console.log(`📋 Characteristic properties:`, {
+                                        read: properties.read,
+                                        write: properties.write,
+                                        writeWithoutResponse: properties.writeWithoutResponse,
+                                        notify: properties.notify
+                                    });
+
+                                    // Verify we can write to this characteristic
+                                    if (properties.write || properties.writeWithoutResponse) {
+                                        this.characteristic = characteristic;
+                                        this.useWriteWithoutResponse = properties.writeWithoutResponse && !properties.write;
+                                        console.log('✅ Found writable OBD characteristic');
+                                        serviceFound = true;
+                                        break;
+                                    } else {
+                                        console.log(`⚠️ Characteristic ${charUUID} not writable`);
+                                    }
                                 } catch (charError) {
-                                    console.log(`⚠️ Characteristic ${charUUID} not found`);
+                                    console.log(`⚠️ Characteristic ${charUUID} not found:`, charError.message);
                                 }
                             }
 
                             if (serviceFound) break;
 
                         } catch (serviceError) {
-                            console.log(`⚠️ Service ${serviceUUID} not found`);
+                            console.log(`⚠️ Service ${serviceUUID} not found:`, serviceError.message);
                         }
                     }
 
@@ -2267,25 +2284,93 @@
                 try {
                     console.log('🔧 Initializing OBD-II protocol...');
 
-                    // Reset and configure ELM327
-                    await this.sendRawCommand('ATZ');        // Reset
-                    await this.delay(2000);
+                    // For Bluetooth connections, try a simpler initialization
+                    if (this.characteristic) {
+                        console.log('📱 Bluetooth OBD initialization...');
 
-                    await this.sendRawCommand('ATE0');       // Echo off
-                    await this.sendRawCommand('ATL0');       // Line feeds off
-                    await this.sendRawCommand('ATS0');       // Spaces off
-                    await this.sendRawCommand('ATSP0');      // Auto protocol
-                    await this.sendRawCommand('ATAT1');      // Adaptive timing on
+                        try {
+                            // Simple test command first
+                            await this.sendRawCommand('ATZ');
+                            await this.delay(2000);
 
-                    console.log('✅ OBD-II protocol initialized');
+                            // Basic configuration
+                            await this.sendRawCommand('ATE0');
+                            await this.delay(500);
+
+                            console.log('✅ Basic OBD-II protocol initialized for Bluetooth');
+                        } catch (initError) {
+                            console.log('⚠️ Advanced initialization failed, using basic mode');
+                            // Continue anyway - some OBD devices work without full initialization
+                        }
+                    } else {
+                        // Full initialization for serial connections
+                        console.log('🔌 Serial OBD initialization...');
+                        await this.sendRawCommand('ATZ');
+                        await this.delay(2000);
+
+                        await this.sendRawCommand('ATE0');
+                        await this.sendRawCommand('ATL0');
+                        await this.sendRawCommand('ATS0');
+                        await this.sendRawCommand('ATSP0');
+                        await this.sendRawCommand('ATAT1');
+
+                        console.log('✅ Full OBD-II protocol initialized for Serial');
+                    }
+
                 } catch (error) {
                     console.error('⚠️ OBD initialization failed:', error);
-                    throw error;
+                    console.log('🔄 Continuing with basic OBD mode...');
+                    // Don't throw error - some devices work without full initialization
                 }
             }
 
             delay(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async readViaNotification() {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        // Set up notification listener
+                        let responseReceived = false;
+                        let responseData = '';
+
+                        const handleNotification = (event) => {
+                            const decoder = new TextDecoder();
+                            const data = decoder.decode(event.target.value);
+                            responseData += data;
+                            console.log('📥 Notification data received:', data);
+
+                            // Check if we have a complete response (ends with > or contains expected data)
+                            if (data.includes('>') || data.includes('41') || data.includes('NO DATA')) {
+                                responseReceived = true;
+                                this.characteristic.removeEventListener('characteristicvaluechanged', handleNotification);
+                                resolve(responseData.trim());
+                            }
+                        };
+
+                        // Start notifications if supported
+                        if (this.characteristic.properties.notify) {
+                            await this.characteristic.startNotifications();
+                            this.characteristic.addEventListener('characteristicvaluechanged', handleNotification);
+
+                            // Timeout after 3 seconds
+                            setTimeout(() => {
+                                if (!responseReceived) {
+                                    this.characteristic.removeEventListener('characteristicvaluechanged', handleNotification);
+                                    resolve(responseData || 'NO DATA');
+                                }
+                            }, 3000);
+                        } else {
+                            // If notifications not supported, return a default response
+                            resolve('NO DATA');
+                        }
+
+                    } catch (error) {
+                        console.error('❌ Notification reading error:', error);
+                        reject(error);
+                    }
+                });
             }
 
             async sendRawCommand(command) {
@@ -2353,21 +2438,45 @@
                         // Bluetooth communication for Bluetooth OBD adapters
                         const encoder = new TextEncoder();
                         const commandWithCR = command + '\r';
+                        const commandBytes = encoder.encode(commandWithCR);
 
-                        // Send command
-                        await this.characteristic.writeValue(encoder.encode(commandWithCR));
-                        console.log('📤 Bluetooth command sent:', commandWithCR);
+                        try {
+                            // Use appropriate write method based on characteristic properties
+                            if (this.useWriteWithoutResponse) {
+                                console.log('📤 Using writeValueWithoutResponse for command:', commandWithCR);
+                                await this.characteristic.writeValueWithoutResponse(commandBytes);
+                            } else {
+                                console.log('📤 Using writeValue for command:', commandWithCR);
+                                await this.characteristic.writeValue(commandBytes);
+                            }
 
-                        // Wait for ELM327 to process
-                        await this.delay(800);
+                            console.log('✅ Bluetooth command sent successfully');
 
-                        // Read response
-                        const response = await this.characteristic.readValue();
-                        const decoder = new TextDecoder();
-                        const responseText = decoder.decode(response);
+                            // Wait for ELM327 to process
+                            await this.delay(1000);
 
-                        console.log('📥 Bluetooth response received:', responseText);
-                        return responseText.trim();
+                            // Try to read response if characteristic supports it
+                            if (this.characteristic.properties.read) {
+                                try {
+                                    const response = await this.characteristic.readValue();
+                                    const decoder = new TextDecoder();
+                                    const responseText = decoder.decode(response);
+                                    console.log('📥 Bluetooth response received:', responseText);
+                                    return responseText.trim();
+                                } catch (readError) {
+                                    console.log('⚠️ Could not read response, using notification method');
+                                    // Fall back to notification-based reading
+                                    return await this.readViaNotification();
+                                }
+                            } else {
+                                console.log('📥 Using notification-based reading');
+                                return await this.readViaNotification();
+                            }
+
+                        } catch (writeError) {
+                            console.error('❌ Bluetooth write error:', writeError);
+                            throw writeError;
+                        }
                     }
 
                     throw new Error('No real OBD communication method available');
