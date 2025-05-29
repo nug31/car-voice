@@ -2112,28 +2112,44 @@
             }
 
             async connectBluetooth(deviceName) {
+                console.log('🔗 Attempting to connect to real OBD device:', deviceName);
+
+                // Reset connection state
+                this.connected = false;
+                this.realMode = false;
+
                 try {
-                    console.log('🔗 Attempting to connect to real OBD device:', deviceName);
-
-                    // Try Web Serial API first (more reliable for OBD)
-                    if ('serial' in navigator) {
-                        console.log('🔌 Trying Web Serial API connection...');
-                        return await this.connectSerial();
-                    }
-
-                    // Fallback to Web Bluetooth
+                    // Try Web Bluetooth first for OBD devices
                     if ('bluetooth' in navigator) {
                         console.log('📱 Trying Web Bluetooth API connection...');
-                        return await this.connectWebBluetooth(deviceName);
+                        const success = await this.connectWebBluetooth(deviceName);
+                        if (success) {
+                            this.connected = true;
+                            this.realMode = true;
+                            console.log('✅ Real OBD Bluetooth connection established');
+                            return true;
+                        }
                     }
 
-                    throw new Error('Neither Web Serial nor Web Bluetooth supported');
+                    // Try Web Serial API for USB OBD adapters
+                    if ('serial' in navigator) {
+                        console.log('🔌 Trying Web Serial API connection...');
+                        const success = await this.connectSerial();
+                        if (success) {
+                            this.connected = true;
+                            this.realMode = true;
+                            console.log('✅ Real OBD Serial connection established');
+                            return true;
+                        }
+                    }
+
+                    throw new Error('No OBD connection method succeeded');
 
                 } catch (error) {
                     console.error('❌ Real OBD connection failed:', error);
-                    console.log('🔄 Using demo mode - connect a real OBD device for live data');
+                    console.log('🔄 Falling back to demo mode - no real OBD device connected');
 
-                    // Set demo mode flag
+                    // Only fall back to demo mode if user explicitly wants to continue
                     this.connected = true;
                     this.realMode = false;
                     return true;
@@ -2164,37 +2180,86 @@
 
             async connectWebBluetooth(deviceName) {
                 try {
-                    // Connect to already paired Bluetooth device
+                    console.log('🔍 Scanning for OBD Bluetooth devices...');
+
+                    // Request OBD device with proper filtering
                     this.device = await navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true,
+                        filters: [
+                            { namePrefix: 'OBD' },
+                            { namePrefix: 'ELM' },
+                            { namePrefix: 'OBDII' },
+                            { namePrefix: 'V-LINK' },
+                            { namePrefix: 'KONNWEI' },
+                            { services: ['0000fff0-0000-1000-8000-00805f9b34fb'] },
+                            { services: ['00001101-0000-1000-8000-00805f9b34fb'] }
+                        ],
                         optionalServices: [
-                            '0000fff0-0000-1000-8000-00805f9b34fb',
-                            '00001101-0000-1000-8000-00805f9b34fb'
+                            '0000fff0-0000-1000-8000-00805f9b34fb', // Common OBD service
+                            '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+                            '0000ffe0-0000-1000-8000-00805f9b34fb'  // Alternative OBD service
                         ]
                     });
 
+                    console.log('📱 Found OBD device:', this.device.name || 'Unknown Device');
+                    console.log('🔗 Connecting to GATT server...');
+
                     this.server = await this.device.gatt.connect();
+                    console.log('✅ GATT server connected');
+
+                    // Try to find the correct service and characteristic for OBD communication
+                    let serviceFound = false;
 
                     // Try common OBD service UUIDs
-                    try {
-                        this.service = await this.server.getPrimaryService('0000fff0-0000-1000-8000-00805f9b34fb');
-                        this.characteristic = await this.service.getCharacteristic('0000fff2-0000-1000-8000-00805f9b34fb');
-                    } catch {
-                        this.service = await this.server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-                        this.characteristic = await this.service.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
+                    const serviceUUIDs = [
+                        '0000fff0-0000-1000-8000-00805f9b34fb',
+                        '00001101-0000-1000-8000-00805f9b34fb',
+                        '0000ffe0-0000-1000-8000-00805f9b34fb'
+                    ];
+
+                    const characteristicUUIDs = [
+                        '0000fff2-0000-1000-8000-00805f9b34fb',
+                        '0000fff1-0000-1000-8000-00805f9b34fb',
+                        '0000ffe1-0000-1000-8000-00805f9b34fb'
+                    ];
+
+                    for (const serviceUUID of serviceUUIDs) {
+                        try {
+                            console.log(`🔍 Trying service UUID: ${serviceUUID}`);
+                            this.service = await this.server.getPrimaryService(serviceUUID);
+
+                            for (const charUUID of characteristicUUIDs) {
+                                try {
+                                    console.log(`🔍 Trying characteristic UUID: ${charUUID}`);
+                                    this.characteristic = await this.service.getCharacteristic(charUUID);
+                                    console.log('✅ Found OBD characteristic');
+                                    serviceFound = true;
+                                    break;
+                                } catch (charError) {
+                                    console.log(`⚠️ Characteristic ${charUUID} not found`);
+                                }
+                            }
+
+                            if (serviceFound) break;
+
+                        } catch (serviceError) {
+                            console.log(`⚠️ Service ${serviceUUID} not found`);
+                        }
+                    }
+
+                    if (!serviceFound) {
+                        throw new Error('No compatible OBD service/characteristic found');
                     }
 
                     // Initialize OBD protocol
+                    console.log('🔧 Initializing OBD protocol...');
                     await this.initializeOBD();
 
-                    this.connected = true;
-                    this.realMode = true;
-                    console.log('✅ Real OBD Bluetooth connection established');
+                    console.log('✅ Real OBD Bluetooth connection fully established');
                     return true;
 
                 } catch (error) {
-                    console.error('❌ Bluetooth connection failed:', error);
-                    throw error;
+                    console.error('❌ Bluetooth OBD connection failed:', error);
+                    return false;
                 }
             }
 
@@ -2252,18 +2317,26 @@
             async sendRawCommand(command) {
                 if (!this.realMode) {
                     // Demo mode - return immediately
+                    console.log('⚠️ Demo mode - not sending real command:', command);
                     return 'OK';
                 }
 
+                console.log('📤 Sending real OBD command:', command);
+
                 try {
                     if (this.port) {
-                        // Serial communication
+                        // Serial communication for USB OBD adapters
                         const writer = this.port.writable.getWriter();
                         const reader = this.port.readable.getReader();
 
-                        // Send command
+                        // Send command with carriage return
                         const encoder = new TextEncoder();
-                        await writer.write(encoder.encode(command + '\r'));
+                        const commandWithCR = command + '\r';
+                        await writer.write(encoder.encode(commandWithCR));
+                        console.log('📤 Serial command sent:', commandWithCR);
+
+                        // Wait for response
+                        await this.delay(500);
 
                         // Read response
                         const { value } = await reader.read();
@@ -2273,24 +2346,34 @@
                         writer.releaseLock();
                         reader.releaseLock();
 
+                        console.log('📥 Serial response received:', response);
                         return response.trim();
 
                     } else if (this.characteristic) {
-                        // Bluetooth communication
+                        // Bluetooth communication for Bluetooth OBD adapters
                         const encoder = new TextEncoder();
-                        await this.characteristic.writeValue(encoder.encode(command + '\r'));
+                        const commandWithCR = command + '\r';
 
-                        await this.delay(300);
+                        // Send command
+                        await this.characteristic.writeValue(encoder.encode(commandWithCR));
+                        console.log('📤 Bluetooth command sent:', commandWithCR);
 
+                        // Wait for ELM327 to process
+                        await this.delay(800);
+
+                        // Read response
                         const response = await this.characteristic.readValue();
                         const decoder = new TextDecoder();
-                        return decoder.decode(response).trim();
+                        const responseText = decoder.decode(response);
+
+                        console.log('📥 Bluetooth response received:', responseText);
+                        return responseText.trim();
                     }
 
-                    throw new Error('No communication method available');
+                    throw new Error('No real OBD communication method available');
 
                 } catch (error) {
-                    console.error('Error sending raw command:', error);
+                    console.error('❌ Error sending real OBD command:', error);
                     throw error;
                 }
             }
@@ -2503,14 +2586,19 @@
                             supportedPIDs: ['010C', '010D', '0105', '012F', '0142']
                         };
 
-                        if (this.obdReader.realMode) {
-                            statusEl.textContent = `Connected via ${type.toUpperCase()} - REAL OBD DATA`;
-                            statusEl.style.background = 'rgba(52, 168, 83, 0.2)';
+                        // Check if we have a real OBD connection
+                        if (this.obdReader.realMode && (this.obdReader.characteristic || this.obdReader.port)) {
+                            statusEl.textContent = `🟢 REAL OBD DATA - ${type.toUpperCase()} Connected`;
+                            statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
                             statusEl.style.color = '#34a853';
+                            statusEl.style.fontWeight = 'bold';
+                            console.log('✅ Real OBD mode confirmed - will read actual car data');
                         } else {
-                            statusEl.textContent = `Connected via ${type.toUpperCase()} - DEMO MODE`;
-                            statusEl.style.background = 'rgba(255, 152, 0, 0.2)';
+                            statusEl.textContent = `🟡 DEMO MODE - ${type.toUpperCase()} (No Real OBD Device)`;
+                            statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
                             statusEl.style.color = '#ff9800';
+                            statusEl.style.fontWeight = 'bold';
+                            console.log('⚠️ Demo mode - using simulated data');
                         }
                         statusEl.className = 'connection-status status-connected';
 
@@ -2593,41 +2681,61 @@
             // Read real data from OBD device
             async readRealOBDData() {
                 if (!this.obdReader || !this.obdReader.connected) {
-                    console.log('OBD reader not connected, falling back to simulation');
+                    console.log('⚠️ OBD reader not connected, falling back to simulation');
+                    this.simulateRealTimeData();
+                    return;
+                }
+
+                // Check if we're in real mode
+                if (!this.obdReader.realMode) {
+                    console.log('⚠️ OBD reader in demo mode, using simulated data');
                     this.simulateRealTimeData();
                     return;
                 }
 
                 try {
-                    // Read real OBD data
+                    console.log('📊 Reading REAL OBD data from car...');
+
+                    // Test connection first
+                    const testResponse = await this.obdReader.sendCommand('0100'); // Supported PIDs test
+                    if (testResponse === 'NO DATA' || testResponse.includes('ERROR')) {
+                        console.log('⚠️ OBD connection test failed, falling back to simulation');
+                        this.simulateRealTimeData();
+                        return;
+                    }
+
+                    console.log('✅ OBD connection test passed, reading real data...');
+
+                    // Read real OBD data from your car
                     const rpm = await this.obdReader.getEngineRPM();
                     const speed = await this.obdReader.getVehicleSpeed();
                     const temp = await this.obdReader.getCoolantTemp();
                     const fuel = await this.obdReader.getFuelLevel();
                     const voltage = await this.obdReader.getBatteryVoltage();
 
-                    // Update real-time data with actual OBD readings
+                    // Update real-time data with actual OBD readings from your car
                     this.realTimeData.engineRPM = rpm;
                     this.realTimeData.vehicleSpeed = speed;
                     this.realTimeData.engineTemp = temp;
                     this.realTimeData.fuelLevel = fuel;
-                    this.realTimeData.batteryLevel = Math.min(100, (voltage / 14.4) * 100); // Convert voltage to percentage
+                    this.realTimeData.batteryLevel = Math.min(100, (voltage / 14.4) * 100);
 
-                    // Determine if engine is running based on RPM
-                    this.realTimeData.engineRunning = rpm > 300; // Engine running if RPM > 300
+                    // Determine if engine is running based on REAL RPM from car
+                    this.realTimeData.engineRunning = rpm > 300;
 
-                    console.log('📊 Real OBD data updated:', {
+                    console.log('🚗 REAL CAR DATA UPDATED:', {
                         rpm: Math.round(rpm),
                         speed: Math.round(speed),
                         temp: Math.round(temp),
                         fuel: Math.round(fuel),
                         battery: Math.round(this.realTimeData.batteryLevel),
-                        engineRunning: this.realTimeData.engineRunning
+                        engineRunning: this.realTimeData.engineRunning,
+                        source: 'REAL OBD DEVICE'
                     });
 
                 } catch (error) {
-                    console.error('Error reading OBD data:', error);
-                    // Fallback to simulation if OBD reading fails
+                    console.error('❌ Error reading REAL OBD data:', error);
+                    console.log('🔄 Falling back to simulation due to OBD read error');
                     this.simulateRealTimeData();
                 }
             }
