@@ -2120,6 +2120,10 @@
                 this.connected = false;
                 this.realMode = false;
                 this.responseBuffer = '';
+                this.commandQueue = [];
+                this.isProcessingCommand = false;
+                this.lastCommandTime = 0;
+                this.minCommandInterval = 1000; // Minimum 1 second between commands
             }
 
             async connectBluetooth(deviceName) {
@@ -2516,6 +2520,7 @@
                 return responseText.trim();
             }
 
+            // Queue-based command sending to prevent GATT conflicts
             async sendRawCommand(command) {
                 if (!this.realMode) {
                     // Demo mode - return immediately
@@ -2523,7 +2528,55 @@
                     return 'OK';
                 }
 
-                console.log('📤 Sending real OBD command:', command);
+                // Add command to queue and wait for execution
+                return new Promise((resolve, reject) => {
+                    this.commandQueue.push({
+                        command,
+                        resolve,
+                        reject,
+                        timestamp: Date.now()
+                    });
+
+                    // Start processing queue if not already running
+                    this.processCommandQueue();
+                });
+            }
+
+            async processCommandQueue() {
+                if (this.isProcessingCommand || this.commandQueue.length === 0) {
+                    return;
+                }
+
+                this.isProcessingCommand = true;
+
+                while (this.commandQueue.length > 0) {
+                    const { command, resolve, reject } = this.commandQueue.shift();
+
+                    try {
+                        // Ensure minimum interval between commands
+                        const timeSinceLastCommand = Date.now() - this.lastCommandTime;
+                        if (timeSinceLastCommand < this.minCommandInterval) {
+                            const waitTime = this.minCommandInterval - timeSinceLastCommand;
+                            console.log(`⏱️ Waiting ${waitTime}ms before next command to prevent GATT conflicts...`);
+                            await this.delay(waitTime);
+                        }
+
+                        console.log('📤 Processing queued OBD command:', command);
+                        const response = await this.executeRawCommand(command);
+                        this.lastCommandTime = Date.now();
+                        resolve(response);
+
+                    } catch (error) {
+                        console.error('❌ Error executing queued command:', error);
+                        reject(error);
+                    }
+                }
+
+                this.isProcessingCommand = false;
+            }
+
+            async executeRawCommand(command) {
+                console.log('📤 Executing real OBD command:', command);
 
                 try {
                     if (this.port) {
@@ -2557,49 +2610,43 @@
                         const commandWithCR = command + '\r';
                         const commandBytes = encoder.encode(commandWithCR);
 
-                        try {
-                            // Use appropriate write method based on characteristic properties
-                            if (this.useWriteWithoutResponse) {
-                                console.log('📤 Using writeValueWithoutResponse for command:', commandWithCR);
-                                await this.characteristic.writeValueWithoutResponse(commandBytes);
-                            } else {
-                                console.log('📤 Using writeValue for command:', commandWithCR);
-                                await this.characteristic.writeValue(commandBytes);
-                            }
+                        // Use appropriate write method based on characteristic properties
+                        if (this.useWriteWithoutResponse) {
+                            console.log('📤 Using writeValueWithoutResponse for command:', commandWithCR);
+                            await this.characteristic.writeValueWithoutResponse(commandBytes);
+                        } else {
+                            console.log('📤 Using writeValue for command:', commandWithCR);
+                            await this.characteristic.writeValue(commandBytes);
+                        }
 
-                            console.log('✅ Bluetooth command sent successfully');
+                        console.log('✅ Bluetooth command sent successfully');
 
-                            // Wait for ELM327 to process
-                            await this.delay(1000);
+                        // Wait for ELM327 to process
+                        await this.delay(1500); // Increased delay for better reliability
 
-                            // Try to read response if characteristic supports it
-                            if (this.characteristic.properties.read) {
-                                try {
-                                    const response = await this.characteristic.readValue();
-                                    const decoder = new TextDecoder();
-                                    const responseText = decoder.decode(response);
-                                    console.log('📥 Bluetooth response received:', responseText);
-                                    return responseText.trim();
-                                } catch (readError) {
-                                    console.log('⚠️ Could not read response, using notification method');
-                                    // Fall back to notification-based reading
-                                    return await this.readViaNotification();
-                                }
-                            } else {
-                                console.log('📥 Using notification-based reading for car response');
+                        // Try to read response if characteristic supports it
+                        if (this.characteristic.properties.read) {
+                            try {
+                                const response = await this.characteristic.readValue();
+                                const decoder = new TextDecoder();
+                                const responseText = decoder.decode(response);
+                                console.log('📥 Bluetooth response received:', responseText);
+                                return responseText.trim();
+                            } catch (readError) {
+                                console.log('⚠️ Could not read response, using notification method');
+                                // Fall back to notification-based reading
                                 return await this.readViaNotification();
                             }
-
-                        } catch (writeError) {
-                            console.error('❌ Bluetooth write error:', writeError);
-                            throw writeError;
+                        } else {
+                            console.log('📥 Using notification-based reading for car response');
+                            return await this.readViaNotification();
                         }
                     }
 
                     throw new Error('No real OBD communication method available');
 
                 } catch (error) {
-                    console.error('❌ Error sending real OBD command:', error);
+                    console.error('❌ Error executing real OBD command:', error);
                     throw error;
                 }
             }
@@ -2770,6 +2817,11 @@
                 const a = parseInt(hex.substring(0, 2), 16);
                 const b = parseInt(hex.substring(2, 4), 16);
                 return ((a * 256) + b) / 1000;
+            }
+
+            // Utility function for delays
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             disconnect() {
@@ -2986,12 +3038,26 @@
 
                     console.log('✅ OBD connection test passed, reading real data...');
 
-                    // Read real OBD data from your car
-                    console.log('📊 Reading individual car parameters...');
+                    // Read real OBD data from your car ONE AT A TIME to prevent GATT conflicts
+                    console.log('📊 Reading individual car parameters sequentially...');
+
+                    console.log('🔧 Reading RPM...');
                     const rpm = await this.obdReader.getEngineRPM();
+                    await this.delay(200); // Small delay between readings
+
+                    console.log('🚗 Reading speed...');
                     const speed = await this.obdReader.getVehicleSpeed();
+                    await this.delay(200);
+
+                    console.log('🌡️ Reading temperature...');
                     const temp = await this.obdReader.getCoolantTemp();
+                    await this.delay(200);
+
+                    console.log('⛽ Reading fuel level...');
                     const fuel = await this.obdReader.getFuelLevel();
+                    await this.delay(200);
+
+                    console.log('🔋 Reading battery voltage...');
                     const voltage = await this.obdReader.getBatteryVoltage();
 
                     // Update real-time data with actual OBD readings from your car
@@ -3078,6 +3144,11 @@
                         element.className = 'metric-trend trend-stable';
                     }
                 });
+            }
+
+            // Utility function for delays
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             // Engine control methods
