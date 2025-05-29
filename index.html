@@ -2387,43 +2387,83 @@
             async readViaNotification() {
                 return new Promise(async (resolve, reject) => {
                     try {
-                        // Set up notification listener
+                        console.log('📥 Setting up notification listener for car ECU response...');
+
+                        // Set up notification listener for car responses
                         let responseReceived = false;
                         let responseData = '';
+                        let responseTimeout;
 
                         const handleNotification = (event) => {
                             const decoder = new TextDecoder();
                             const data = decoder.decode(event.target.value);
                             responseData += data;
-                            console.log('📥 Notification data received:', data);
+                            console.log('📥 Car ECU notification data:', data);
+                            console.log('📥 Accumulated response data:', responseData);
 
-                            // Check if we have a complete response (ends with > or contains expected data)
-                            if (data.includes('>') || data.includes('41') || data.includes('NO DATA')) {
+                            // Check for complete response patterns from car ECU
+                            const cleanData = responseData.replace(/[\r\n\s]/g, '').toUpperCase();
+
+                            // Look for complete OBD response patterns
+                            if (cleanData.includes('>') ||
+                                cleanData.match(/^41[0-9A-F]+/) ||
+                                cleanData.includes('NODATA') ||
+                                cleanData.includes('ERROR') ||
+                                cleanData.includes('UNABLETOCONNECT') ||
+                                cleanData.includes('BUSBUSY') ||
+                                (cleanData.startsWith('41') && cleanData.length >= 6)) {
+
+                                console.log('✅ Complete response received from car ECU:', cleanData);
                                 responseReceived = true;
+
+                                // Clear timeout
+                                if (responseTimeout) {
+                                    clearTimeout(responseTimeout);
+                                }
+
+                                // Clean up listener
                                 this.characteristic.removeEventListener('characteristicvaluechanged', handleNotification);
+
+                                // Stop notifications to save battery (non-blocking)
+                                this.characteristic.stopNotifications().catch(stopError => {
+                                    console.log('⚠️ Could not stop notifications:', stopError.message);
+                                });
+
                                 resolve(responseData.trim());
                             }
                         };
 
                         // Start notifications if supported
                         if (this.characteristic.properties.notify) {
+                            console.log('📡 Starting notifications for car ECU responses...');
                             await this.characteristic.startNotifications();
                             this.characteristic.addEventListener('characteristicvaluechanged', handleNotification);
 
-                            // Timeout after 3 seconds
-                            setTimeout(() => {
+                            // Extended timeout for car ECU responses (5 seconds)
+                            responseTimeout = setTimeout(async () => {
                                 if (!responseReceived) {
+                                    console.log('⏰ Timeout waiting for car ECU response');
+                                    console.log('📥 Partial response received:', responseData);
+
                                     this.characteristic.removeEventListener('characteristicvaluechanged', handleNotification);
+
+                                    // Stop notifications
+                                    try {
+                                        await this.characteristic.stopNotifications();
+                                    } catch (stopError) {
+                                        console.log('⚠️ Could not stop notifications on timeout');
+                                    }
+
                                     resolve(responseData || 'NO DATA');
                                 }
-                            }, 3000);
+                            }, 5000);
                         } else {
-                            // If notifications not supported, return a default response
+                            console.log('⚠️ Notifications not supported by this OBD device');
                             resolve('NO DATA');
                         }
 
                     } catch (error) {
-                        console.error('❌ Notification reading error:', error);
+                        console.error('❌ Error setting up car ECU notification reading:', error);
                         reject(error);
                     }
                 });
@@ -2525,7 +2565,7 @@
                                     return await this.readViaNotification();
                                 }
                             } else {
-                                console.log('📥 Using notification-based reading');
+                                console.log('📥 Using notification-based reading for car response');
                                 return await this.readViaNotification();
                             }
 
@@ -2548,7 +2588,7 @@
                     throw new Error('OBD device not connected');
                 }
 
-                console.log('📤 Sending OBD command:', command);
+                console.log('📤 Sending OBD command to REAL car:', command);
 
                 // If not in real mode, return demo data that shows engine is OFF
                 if (!this.realMode) {
@@ -2572,27 +2612,38 @@
                 }
 
                 try {
-                    // Send real OBD command to car
+                    // Send real OBD command to your car's ECU
+                    console.log('🚗 Sending command to car ECU via OBD-II...');
                     const response = await this.sendRawCommand(command);
 
-                    // Clean response
+                    // Clean response from car
                     const cleanResponse = response
                         .replace(/[\r\n>]/g, '')
                         .replace(/\s+/g, ' ')
-                        .trim();
+                        .replace(/\s/g, '')  // Remove all spaces for parsing
+                        .trim()
+                        .toUpperCase();
 
-                    console.log('📥 Real OBD response:', cleanResponse);
+                    console.log('📥 Raw response from car ECU:', response);
+                    console.log('📥 Cleaned response for parsing:', cleanResponse);
 
-                    // Validate response format
-                    if (cleanResponse.includes('NO DATA') || cleanResponse.includes('ERROR') || cleanResponse.length < 6) {
-                        console.log('⚠️ Invalid OBD response, using fallback');
+                    // Validate response format from car
+                    if (cleanResponse.includes('NODATA') || cleanResponse.includes('ERROR') || cleanResponse.includes('?') || cleanResponse.length < 4) {
+                        console.log('⚠️ Invalid response from car ECU:', cleanResponse);
                         return 'NO DATA';
                     }
 
-                    return cleanResponse;
+                    // Check if response starts with expected format (41 XX for positive response)
+                    if (cleanResponse.startsWith('41')) {
+                        console.log('✅ Valid OBD response from car:', cleanResponse);
+                        return cleanResponse;
+                    } else {
+                        console.log('⚠️ Unexpected response format from car:', cleanResponse);
+                        return 'NO DATA';
+                    }
 
                 } catch (error) {
-                    console.error('❌ Error sending OBD command:', error);
+                    console.error('❌ Error communicating with car ECU:', error);
                     return 'NO DATA';
                 }
             }
