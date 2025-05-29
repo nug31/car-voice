@@ -1724,12 +1724,15 @@
                             </div>
 
                             <input type="hidden" id="obdAddress" value="">
-                            <div style="display: flex; gap: 10px; justify-content: center;">
-                                <button type="submit" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); flex: 1;" disabled id="connectOBDBtn">
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button type="submit" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); flex: 1; min-width: 120px;" disabled id="connectOBDBtn">
                                     🔗 Connect OBD
                                 </button>
-                                <button type="button" class="connect-button" onclick="connectOBDManual()" style="background: linear-gradient(45deg, #2196F3, #4285f4); flex: 1;">
+                                <button type="button" class="connect-button" onclick="connectOBDManual()" style="background: linear-gradient(45deg, #2196F3, #4285f4); flex: 1; min-width: 120px;">
                                     📱 Manual Select
+                                </button>
+                                <button type="button" class="connect-button" onclick="connectUSBSerial()" style="background: linear-gradient(45deg, #9c27b0, #e91e63); flex: 1; min-width: 120px;">
+                                    🔌 USB Serial
                                 </button>
                             </div>
                         </div>
@@ -2122,7 +2125,7 @@
                 this.realMode = false;
 
                 try {
-                    // Try Web Bluetooth first for OBD devices
+                    // Only try Web Bluetooth for now (Serial requires direct user gesture)
                     if ('bluetooth' in navigator) {
                         console.log('📱 Trying Web Bluetooth API connection...');
                         const success = await this.connectWebBluetooth(deviceName);
@@ -2134,25 +2137,13 @@
                         }
                     }
 
-                    // Try Web Serial API for USB OBD adapters
-                    if ('serial' in navigator) {
-                        console.log('🔌 Trying Web Serial API connection...');
-                        const success = await this.connectSerial();
-                        if (success) {
-                            this.connected = true;
-                            this.realMode = true;
-                            console.log('✅ Real OBD Serial connection established');
-                            return true;
-                        }
-                    }
-
-                    throw new Error('No OBD connection method succeeded');
+                    throw new Error('Bluetooth OBD connection failed');
 
                 } catch (error) {
                     console.error('❌ Real OBD connection failed:', error);
                     console.log('🔄 Falling back to demo mode - no real OBD device connected');
 
-                    // Only fall back to demo mode if user explicitly wants to continue
+                    // Fall back to demo mode
                     this.connected = true;
                     this.realMode = false;
                     return true;
@@ -2283,7 +2274,53 @@
                     }
 
                     if (!serviceFound) {
-                        throw new Error('No compatible OBD service/characteristic found');
+                        console.log('⚠️ No standard OBD services found, trying alternative approach...');
+
+                        // Try to get all available services and characteristics
+                        try {
+                            const services = await this.server.getPrimaryServices();
+                            console.log('📋 Available services:', services.length);
+
+                            for (const service of services) {
+                                console.log(`🔍 Checking service: ${service.uuid}`);
+                                try {
+                                    const characteristics = await service.getCharacteristics();
+                                    console.log(`📋 Service ${service.uuid} has ${characteristics.length} characteristics`);
+
+                                    for (const char of characteristics) {
+                                        console.log(`🔍 Characteristic: ${char.uuid}`, {
+                                            read: char.properties.read,
+                                            write: char.properties.write,
+                                            writeWithoutResponse: char.properties.writeWithoutResponse,
+                                            notify: char.properties.notify
+                                        });
+
+                                        // Use the first writable characteristic we find
+                                        if (char.properties.write || char.properties.writeWithoutResponse) {
+                                            this.service = service;
+                                            this.characteristic = char;
+                                            this.useWriteWithoutResponse = char.properties.writeWithoutResponse && !char.properties.write;
+                                            console.log('✅ Found usable characteristic for OBD communication');
+                                            serviceFound = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (serviceFound) break;
+
+                                } catch (charError) {
+                                    console.log(`⚠️ Could not get characteristics for service ${service.uuid}`);
+                                }
+                            }
+                        } catch (serviceError) {
+                            console.log('⚠️ Could not enumerate services');
+                        }
+                    }
+
+                    if (!serviceFound) {
+                        console.log('❌ No usable OBD communication channel found');
+                        console.log('💡 This device may not be an OBD adapter, or uses a different protocol');
+                        return false;
                     }
 
                     // Initialize OBD protocol
@@ -3301,6 +3338,76 @@
 
             } catch (error) {
                 console.error('❌ Manual OBD connection error:', error);
+            }
+        }
+
+        // USB Serial OBD connection (requires direct user gesture)
+        async function connectUSBSerial() {
+            try {
+                console.log('🔌 USB Serial OBD connection...');
+                console.log('💡 This will show USB/Serial OBD adapters');
+
+                const statusEl = document.getElementById('obdStatus');
+                statusEl.textContent = 'Requesting USB Serial port...';
+                statusEl.className = 'connection-status status-connecting';
+
+                // Check if Serial API is supported
+                if (!('serial' in navigator)) {
+                    alert('❌ Web Serial API not supported in this browser. Try Chrome or Edge.');
+                    return;
+                }
+
+                try {
+                    console.log('🔍 Requesting serial port selection...');
+
+                    // Initialize OBD reader
+                    const obdReader = new OBDReader();
+
+                    // Request serial port directly (this requires user gesture)
+                    obdReader.port = await navigator.serial.requestPort();
+                    await obdReader.port.open({ baudRate: 38400 });
+
+                    console.log('✅ Serial port opened successfully');
+
+                    // Set up the connection
+                    obdReader.connected = true;
+                    obdReader.realMode = true;
+
+                    // Initialize OBD protocol
+                    await obdReader.initializeOBD();
+
+                    // Connect using the serial connection
+                    carDataManager.obdReader = obdReader;
+                    carDataManager.connections.obd.connected = true;
+                    carDataManager.connections.obd.device = 'USB Serial OBD';
+
+                    statusEl.textContent = '🟢 REAL OBD DATA - USB SERIAL Connected';
+                    statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                    statusEl.style.color = '#34a853';
+                    statusEl.style.fontWeight = 'bold';
+                    statusEl.className = 'connection-status status-connected';
+
+                    console.log('✅ USB Serial OBD connection successful');
+
+                    // Start reading real OBD data
+                    carDataManager.startRealOBDDataReading();
+
+                } catch (error) {
+                    console.error('❌ USB Serial connection failed:', error);
+                    if (error.message.includes('No port selected')) {
+                        statusEl.textContent = '⚠️ No USB port selected - Try again';
+                        statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
+                        statusEl.style.color = '#ff9800';
+                        console.log('💡 Tip: Make sure to select your USB OBD adapter from the list');
+                    } else {
+                        statusEl.textContent = 'USB Serial connection failed';
+                        statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
+                        statusEl.style.color = '#f44336';
+                    }
+                }
+
+            } catch (error) {
+                console.error('❌ USB Serial OBD connection error:', error);
             }
         }
 
