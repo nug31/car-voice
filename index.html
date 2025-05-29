@@ -1735,6 +1735,11 @@
                                     🔌 USB Serial
                                 </button>
                             </div>
+                            <div style="margin-top: 10px; text-align: center;">
+                                <button type="button" onclick="testRealDataReading()" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); padding: 8px 16px; font-size: 0.9rem;">
+                                    🔍 Test Real Data Reading
+                                </button>
+                            </div>
                         </div>
                     </form>
                     <div id="obdStatus" class="connection-status status-disconnected">
@@ -3103,6 +3108,33 @@
 
         // Initialize Car Data Manager
         const carDataManager = new CarDataManager();
+
+        // Test function to manually trigger real data reading
+        async function testRealDataReading() {
+            console.log('🔍 MANUAL TEST: Testing real data reading...');
+
+            if (!carDataManager.obdReader) {
+                console.log('❌ No OBD reader available - please connect first');
+                alert('Please connect to an OBD device first using "📱 Manual Select"');
+                return;
+            }
+
+            console.log('🔍 OBD Reader Status Check:', {
+                connected: carDataManager.obdReader.connected,
+                realMode: carDataManager.obdReader.realMode,
+                hasCharacteristic: !!carDataManager.obdReader.characteristic,
+                hasPort: !!carDataManager.obdReader.port,
+                deviceName: carDataManager.obdReader.device?.name || 'Unknown'
+            });
+
+            try {
+                console.log('🧪 MANUAL TEST: Calling readRealOBDData...');
+                await carDataManager.readRealOBDData();
+                console.log('✅ MANUAL TEST: Real data reading completed');
+            } catch (error) {
+                console.error('❌ MANUAL TEST: Error during real data reading:', error);
+            }
+        }
 
         // Video Upload and Management System
         class VideoManager {
