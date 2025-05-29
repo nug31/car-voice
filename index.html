@@ -1747,6 +1747,9 @@
                                 <button type="button" class="connect-button" onclick="fixOBDCommunication()" style="background: linear-gradient(45deg, #e91e63, #9c27b0); font-weight: bold; flex: 1; min-width: 140px;">
                                     🔧 Fix Communication
                                 </button>
+                                <button type="button" class="connect-button" onclick="testRPMCommand()" style="background: linear-gradient(45deg, #ff5722, #ff9800); font-weight: bold; flex: 1; min-width: 120px;">
+                                    🔧 Test RPM
+                                </button>
                             </div>
 
                         </div>
@@ -2856,11 +2859,60 @@
 
             // Parse OBD-II responses
             parseRPM(response) {
-                if (response === 'NO DATA') return 0;
-                const hex = response.replace(/\s/g, '').substring(4);
+                console.log('🔧 PARSING RPM - Raw response:', response);
+
+                if (response === 'NO DATA' || !response || response.includes('ERROR')) {
+                    console.log('⚠️ RPM: No valid data received');
+                    return 0;
+                }
+
+                // Clean the response
+                const cleanResponse = response.replace(/[\r\n>]/g, '').replace(/\s+/g, ' ').trim();
+                console.log('🔧 PARSING RPM - Cleaned response:', cleanResponse);
+
+                // Check if it's a valid OBD response (should start with 41 0C for RPM)
+                if (!cleanResponse.toUpperCase().startsWith('41') && !cleanResponse.toUpperCase().startsWith('410C')) {
+                    console.log('⚠️ RPM: Invalid response format, expected to start with 41 or 410C');
+                    return 0;
+                }
+
+                // Extract hex data (skip the first 4 characters: "41 0C" or "410C")
+                let hex;
+                if (cleanResponse.includes(' ')) {
+                    // Format: "41 0C XX XX"
+                    const parts = cleanResponse.split(' ');
+                    if (parts.length >= 4) {
+                        hex = parts[2] + parts[3];
+                    } else {
+                        console.log('⚠️ RPM: Not enough data parts in response');
+                        return 0;
+                    }
+                } else {
+                    // Format: "410CXXXX"
+                    hex = cleanResponse.substring(4);
+                }
+
+                console.log('🔧 PARSING RPM - Hex data:', hex);
+
+                if (hex.length < 4) {
+                    console.log('⚠️ RPM: Hex data too short, expected 4 characters');
+                    return 0;
+                }
+
                 const a = parseInt(hex.substring(0, 2), 16);
                 const b = parseInt(hex.substring(2, 4), 16);
-                return ((a * 256) + b) / 4;
+                const rpm = ((a * 256) + b) / 4;
+
+                console.log('🔧 PARSING RPM - Calculation:', {
+                    hexA: hex.substring(0, 2),
+                    hexB: hex.substring(2, 4),
+                    decimalA: a,
+                    decimalB: b,
+                    formula: `((${a} * 256) + ${b}) / 4`,
+                    finalRPM: rpm
+                });
+
+                return rpm;
             }
 
             parseSpeed(response) {
@@ -3543,10 +3595,79 @@
             }
         }
 
+        // Test RPM Command Specifically
+        async function testRPMCommand() {
+            try {
+                console.log('🔧 TESTING RPM COMMAND: Starting RPM test...');
+                alert('🔧 Testing RPM command specifically...\n\nThis will send the RPM command (010C) to your car and show detailed debugging info.');
+
+                if (!carDataManager.obdReader) {
+                    alert('❌ No OBD reader found. Please connect to a device first.');
+                    return;
+                }
+
+                const obdReader = carDataManager.obdReader;
+
+                if (!obdReader.connected || !obdReader.realMode) {
+                    alert('❌ OBD reader not in real mode. Please connect to a real OBD device first.');
+                    return;
+                }
+
+                console.log('🔧 OBD Reader Status:', {
+                    connected: obdReader.connected,
+                    realMode: obdReader.realMode,
+                    hasCharacteristic: !!obdReader.characteristic,
+                    hasPort: !!obdReader.port,
+                    deviceName: obdReader.device?.name || 'Unknown'
+                });
+
+                // Test the RPM command directly
+                console.log('📤 Sending RPM command (010C) to car...');
+                const rawResponse = await obdReader.sendCommand('010C');
+                console.log('📥 Raw RPM response from car:', rawResponse);
+
+                // Parse the response
+                const parsedRPM = obdReader.parseRPM(rawResponse);
+                console.log('🔧 Parsed RPM result:', parsedRPM);
+
+                // Show detailed results
+                alert(`🔧 RPM COMMAND TEST RESULTS:\n\nRaw Response: "${rawResponse}"\nParsed RPM: ${parsedRPM}\n\nCheck console (F12) for detailed parsing info.\n\nIf RPM is 0 but your engine is running, there may be an issue with the OBD response format.`);
+
+                // Also test other commands for comparison
+                console.log('🧪 Testing other OBD commands for comparison...');
+
+                try {
+                    const speedResponse = await obdReader.sendCommand('010D');
+                    console.log('📥 Speed command response:', speedResponse);
+                } catch (speedError) {
+                    console.log('⚠️ Speed command failed:', speedError);
+                }
+
+                try {
+                    const tempResponse = await obdReader.sendCommand('0105');
+                    console.log('📥 Temperature command response:', tempResponse);
+                } catch (tempError) {
+                    console.log('⚠️ Temperature command failed:', tempError);
+                }
+
+                try {
+                    const supportedResponse = await obdReader.sendCommand('0100');
+                    console.log('📥 Supported PIDs response:', supportedResponse);
+                } catch (supportedError) {
+                    console.log('⚠️ Supported PIDs command failed:', supportedError);
+                }
+
+            } catch (error) {
+                console.error('❌ RPM test failed:', error);
+                alert('❌ RPM test error: ' + error.message);
+            }
+        }
+
         // Make functions globally accessible for debugging
         window.testRealDataReading = testRealDataReading;
         window.forceRealOBDConnection = forceRealOBDConnection;
         window.fixOBDCommunication = fixOBDCommunication;
+        window.testRPMCommand = testRPMCommand;
 
         // Debug: Log when script loads
         console.log('🚗 Car Voice App loaded successfully');
