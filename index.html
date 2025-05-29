@@ -1728,6 +1728,9 @@
                                 <button type="submit" class="connect-button" style="background: linear-gradient(45deg, #ff9800, #f44336); flex: 1;" disabled id="connectOBDBtn">
                                     🔗 Connect OBD
                                 </button>
+                                <button type="button" class="connect-button" onclick="connectOBDManual()" style="background: linear-gradient(45deg, #2196F3, #4285f4); flex: 1;">
+                                    📱 Manual Select
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -2182,23 +2185,39 @@
                 try {
                     console.log('🔍 Scanning for OBD Bluetooth devices...');
 
-                    // Request OBD device with proper filtering
-                    this.device = await navigator.bluetooth.requestDevice({
-                        filters: [
-                            { namePrefix: 'OBD' },
-                            { namePrefix: 'ELM' },
-                            { namePrefix: 'OBDII' },
-                            { namePrefix: 'V-LINK' },
-                            { namePrefix: 'KONNWEI' },
-                            { services: ['0000fff0-0000-1000-8000-00805f9b34fb'] },
-                            { services: ['00001101-0000-1000-8000-00805f9b34fb'] }
-                        ],
-                        optionalServices: [
-                            '0000fff0-0000-1000-8000-00805f9b34fb', // Common OBD service
-                            '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
-                            '0000ffe0-0000-1000-8000-00805f9b34fb'  // Alternative OBD service
-                        ]
-                    });
+                    // Try specific OBD device filtering first
+                    try {
+                        console.log('🔍 Trying specific OBD device filters...');
+                        this.device = await navigator.bluetooth.requestDevice({
+                            filters: [
+                                { namePrefix: 'OBD' },
+                                { namePrefix: 'ELM' },
+                                { namePrefix: 'OBDII' },
+                                { namePrefix: 'V-LINK' },
+                                { namePrefix: 'KONNWEI' },
+                                { namePrefix: 'VEEPEAK' },
+                                { namePrefix: 'BAFX' },
+                                { services: ['0000fff0-0000-1000-8000-00805f9b34fb'] },
+                                { services: ['00001101-0000-1000-8000-00805f9b34fb'] }
+                            ],
+                            optionalServices: [
+                                '0000fff0-0000-1000-8000-00805f9b34fb',
+                                '00001101-0000-1000-8000-00805f9b34fb',
+                                '0000ffe0-0000-1000-8000-00805f9b34fb'
+                            ]
+                        });
+                    } catch (filterError) {
+                        console.log('⚠️ Specific filters failed, trying broader search...');
+                        // Fallback to accept all devices if specific filtering fails
+                        this.device = await navigator.bluetooth.requestDevice({
+                            acceptAllDevices: true,
+                            optionalServices: [
+                                '0000fff0-0000-1000-8000-00805f9b34fb',
+                                '00001101-0000-1000-8000-00805f9b34fb',
+                                '0000ffe0-0000-1000-8000-00805f9b34fb'
+                            ]
+                        });
+                    }
 
                     console.log('📱 Found OBD device:', this.device.name || 'Unknown Device');
                     console.log('🔗 Connecting to GATT server...');
@@ -2675,14 +2694,21 @@
             // OBD-II Connection with Real Data Reading
             async connectOBD(type, address) {
                 const statusEl = document.getElementById('obdStatus');
-                statusEl.textContent = 'Connecting...';
+                statusEl.textContent = 'Connecting to OBD device...';
                 statusEl.className = 'connection-status status-connecting';
 
                 try {
                     // Initialize OBD reader
                     this.obdReader = new OBDReader();
 
-                    // Try to connect to the paired Bluetooth device
+                    // Show user instructions
+                    console.log('📋 OBD Connection Instructions:');
+                    console.log('1. Make sure your OBD device is plugged into your car');
+                    console.log('2. Turn on your car (ignition on)');
+                    console.log('3. Make sure OBD device is paired with your computer/phone');
+                    console.log('4. Select your OBD device from the list that appears');
+
+                    // Try to connect to the OBD device
                     const connected = await this.obdReader.connectBluetooth(address);
 
                     if (connected) {
@@ -2702,6 +2728,7 @@
                             statusEl.style.color = '#34a853';
                             statusEl.style.fontWeight = 'bold';
                             console.log('✅ Real OBD mode confirmed - will read actual car data');
+                            console.log('🚗 Connected to device:', this.obdReader.device?.name || 'Unknown Device');
                         } else {
                             statusEl.textContent = `🟡 DEMO MODE - ${type.toUpperCase()} (No Real OBD Device)`;
                             statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
@@ -2718,8 +2745,18 @@
                         throw new Error('OBD connection failed');
                     }
                 } catch (error) {
-                    console.error('OBD connection error:', error);
-                    statusEl.textContent = 'Connection Failed - Using Demo Data';
+                    console.error('❌ OBD connection error:', error);
+
+                    if (error.message.includes('cancelled') || error.message.includes('No port selected')) {
+                        statusEl.textContent = '⚠️ Connection Cancelled - Try Again';
+                        statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
+                        statusEl.style.color = '#ff9800';
+                        console.log('💡 Tip: Make sure to select your OBD device from the list');
+                    } else {
+                        statusEl.textContent = 'Connection Failed - Using Demo Data';
+                        statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
+                        statusEl.style.color = '#ff9800';
+                    }
                     statusEl.className = 'connection-status status-connecting';
 
                     // Fallback to simulated data
@@ -3212,6 +3249,59 @@
             }
 
             await carDataManager.connectOBD(type, address);
+        }
+
+        // Manual OBD device selection (bypasses filtering)
+        async function connectOBDManual() {
+            try {
+                console.log('📱 Manual OBD device selection...');
+                console.log('💡 This will show ALL Bluetooth devices - select your OBD adapter');
+
+                const statusEl = document.getElementById('obdStatus');
+                statusEl.textContent = 'Scanning for devices...';
+                statusEl.className = 'connection-status status-connecting';
+
+                // Try direct connection with acceptAllDevices
+                if ('bluetooth' in navigator) {
+                    try {
+                        console.log('🔍 Requesting device selection...');
+                        const device = await navigator.bluetooth.requestDevice({
+                            acceptAllDevices: true,
+                            optionalServices: [
+                                '0000fff0-0000-1000-8000-00805f9b34fb',
+                                '00001101-0000-1000-8000-00805f9b34fb',
+                                '0000ffe0-0000-1000-8000-00805f9b34fb'
+                            ]
+                        });
+
+                        console.log('📱 Selected device:', device.name || 'Unknown Device');
+
+                        // Set the device address and trigger connection
+                        document.getElementById('obdAddress').value = device.name || 'Manual Device';
+
+                        // Connect using the selected device
+                        await carDataManager.connectOBD('bluetooth', device.name || 'Manual Device');
+
+                    } catch (error) {
+                        console.error('❌ Manual device selection failed:', error);
+                        if (error.message.includes('cancelled')) {
+                            statusEl.textContent = '⚠️ Device selection cancelled - Try again';
+                            statusEl.style.background = 'rgba(255, 152, 0, 0.3)';
+                            statusEl.style.color = '#ff9800';
+                            console.log('💡 Tip: Make sure to select your OBD device from the list');
+                        } else {
+                            statusEl.textContent = 'Manual selection failed';
+                            statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
+                            statusEl.style.color = '#f44336';
+                        }
+                    }
+                } else {
+                    alert('❌ Bluetooth not supported in this browser');
+                }
+
+            } catch (error) {
+                console.error('❌ Manual OBD connection error:', error);
+            }
         }
 
         async function connectManufacturer(event) {
