@@ -1755,6 +1755,9 @@
                                 <button type="button" class="connect-button" onclick="emergencyOBDFix()" style="background: linear-gradient(45deg, #f44336, #d32f2f); font-weight: bold; flex: 1; min-width: 160px; color: white;">
                                     🚨 Emergency Fix
                                 </button>
+                                <button type="button" class="connect-button" onclick="fixOBDBLE()" style="background: linear-gradient(45deg, #4caf50, #2e7d32); font-weight: bold; flex: 1; min-width: 140px; color: white;">
+                                    🔧 Fix OBDBLE
+                                </button>
                             </div>
 
                         </div>
@@ -2669,8 +2672,8 @@
 
                     console.error('❌ No communication method available. Debug info:', errorDetails);
 
-                    // Try to re-establish communication if device is connected but characteristic is missing
-                    if (this.device && this.device.gatt && this.device.gatt.connected && !this.characteristic) {
+                    // Try to re-establish communication if device is connected but characteristic is missing OR invalid
+                    if (this.device && this.device.gatt && (!this.characteristic || error.message.includes('no longer valid'))) {
                         console.log('🔄 Device connected but no characteristic - attempting to re-establish communication...');
                         try {
                             // Try to reconnect to services and characteristics
@@ -3818,12 +3821,140 @@
             }
         }
 
+        // OBDBLE Specific Fix Function
+        async function fixOBDBLE() {
+            try {
+                console.log('🔧 OBDBLE SPECIFIC FIX: Starting OBDBLE-specific fix...');
+                alert('🔧 OBDBLE SPECIFIC FIX\n\nThis will use the known working configuration for your OBDBLE device.\n\nMake sure your car engine is running!');
+
+                if (!carDataManager.obdReader || !carDataManager.obdReader.device) {
+                    alert('❌ No OBDBLE device found. Please connect first using "📱 Manual Select".');
+                    return false;
+                }
+
+                const obdReader = carDataManager.obdReader;
+                const device = obdReader.device;
+
+                console.log('🔍 OBDBLE device info:', {
+                    name: device.name,
+                    id: device.id,
+                    gattConnected: device.gatt?.connected
+                });
+
+                // Step 1: Ensure GATT connection
+                console.log('🔄 Step 1: Ensuring GATT connection...');
+                if (!device.gatt.connected) {
+                    await device.gatt.connect();
+                    console.log('✅ GATT connected');
+                }
+
+                // Step 2: Get the specific OBDBLE service we know works
+                console.log('🔍 Step 2: Getting OBDBLE service (fff0)...');
+                const serviceUuid = '0000fff0-0000-1000-8000-00805f9b34fb';
+                const characteristicUuid = '0000fff2-0000-1000-8000-00805f9b34fb';
+
+                try {
+                    const service = await device.gatt.getPrimaryService(serviceUuid);
+                    console.log('✅ Found OBDBLE service:', serviceUuid);
+
+                    const characteristic = await service.getCharacteristic(characteristicUuid);
+                    console.log('✅ Found OBDBLE characteristic:', characteristicUuid);
+
+                    // Step 3: Set up the connection
+                    console.log('🔧 Step 3: Setting up OBDBLE connection...');
+                    obdReader.characteristic = characteristic;
+                    obdReader.service = service;
+                    obdReader.useWriteWithoutResponse = characteristic.properties.writeWithoutResponse;
+
+                    console.log('🔍 OBDBLE characteristic properties:', {
+                        read: characteristic.properties.read,
+                        write: characteristic.properties.write,
+                        writeWithoutResponse: characteristic.properties.writeWithoutResponse,
+                        notify: characteristic.properties.notify
+                    });
+
+                    // Set up notifications if available
+                    if (characteristic.properties.notify) {
+                        try {
+                            await characteristic.startNotifications();
+                            characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                                const decoder = new TextDecoder();
+                                const response = decoder.decode(event.target.value);
+                                console.log('📥 OBDBLE notification:', response);
+                                obdReader.responseBuffer += response;
+                            });
+                            console.log('✅ OBDBLE notifications enabled');
+                        } catch (notifyError) {
+                            console.log('⚠️ Could not enable OBDBLE notifications:', notifyError);
+                        }
+                    }
+
+                    // Step 4: Test the OBDBLE connection
+                    console.log('🧪 Step 4: Testing OBDBLE connection...');
+                    try {
+                        // Send ELM327 reset command
+                        const testCommand = 'ATZ\r';
+                        const encoder = new TextEncoder();
+                        const commandBytes = encoder.encode(testCommand);
+
+                        if (obdReader.useWriteWithoutResponse) {
+                            await characteristic.writeValueWithoutResponse(commandBytes);
+                        } else {
+                            await characteristic.writeValue(commandBytes);
+                        }
+
+                        console.log('✅ OBDBLE test command sent successfully');
+
+                        // Wait for response
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        // Update status
+                        const statusEl = document.getElementById('obdStatus');
+                        statusEl.textContent = `🟢 REAL OBD DATA - ${device.name} Connected (OBDBLE Fixed)`;
+                        statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                        statusEl.style.color = '#34a853';
+                        statusEl.style.fontWeight = 'bold';
+
+                        console.log('✅ OBDBLE FIX SUCCESSFUL!');
+                        alert(`✅ OBDBLE FIX SUCCESSFUL!\n\nYour OBDBLE device is now properly connected!\n\nService: ${serviceUuid}\nCharacteristic: ${characteristicUuid}\n\nTry the RPM test now!`);
+
+                        // Clear any existing intervals and restart
+                        if (carDataManager.updateInterval) {
+                            clearInterval(carDataManager.updateInterval);
+                            carDataManager.updateInterval = null;
+                        }
+
+                        // Start reading real data
+                        carDataManager.startRealOBDDataReading();
+
+                        return true;
+
+                    } catch (testError) {
+                        console.log('❌ OBDBLE test command failed:', testError);
+                        alert('❌ OBDBLE connection established but test failed. The device may need initialization.');
+                        return false;
+                    }
+
+                } catch (serviceError) {
+                    console.log('❌ Could not get OBDBLE service/characteristic:', serviceError);
+                    alert('❌ Could not connect to OBDBLE service.\n\nThe device may not be properly paired or may be disconnected.');
+                    return false;
+                }
+
+            } catch (error) {
+                console.error('❌ OBDBLE fix failed:', error);
+                alert('❌ OBDBLE fix error: ' + error.message);
+                return false;
+            }
+        }
+
         // Make functions globally accessible for debugging
         window.testRealDataReading = testRealDataReading;
         window.forceRealOBDConnection = forceRealOBDConnection;
         window.fixOBDCommunication = fixOBDCommunication;
         window.testRPMCommand = testRPMCommand;
         window.emergencyOBDFix = emergencyOBDFix;
+        window.fixOBDBLE = fixOBDBLE;
 
         // Debug: Log when script loads
         console.log('🚗 Car Voice App loaded successfully');
