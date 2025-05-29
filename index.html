@@ -3182,30 +3182,50 @@
 
         // Test function to manually trigger real data reading
         async function testRealDataReading() {
-            console.log('🔍 MANUAL TEST: Testing real data reading...');
-
-            if (!carDataManager.obdReader) {
-                console.log('❌ No OBD reader available - please connect first');
-                alert('Please connect to an OBD device first using "📱 Manual Select"');
-                return;
-            }
-
-            console.log('🔍 OBD Reader Status Check:', {
-                connected: carDataManager.obdReader.connected,
-                realMode: carDataManager.obdReader.realMode,
-                hasCharacteristic: !!carDataManager.obdReader.characteristic,
-                hasPort: !!carDataManager.obdReader.port,
-                deviceName: carDataManager.obdReader.device?.name || 'Unknown'
-            });
-
             try {
+                console.log('🔍 MANUAL TEST: Function called successfully!');
+                console.log('🔍 MANUAL TEST: Testing real data reading...');
+
+                // Add visual feedback
+                alert('🔍 Test button clicked! Check console for detailed logs.');
+
+                if (!carDataManager) {
+                    console.log('❌ Car Data Manager not initialized');
+                    alert('❌ Car Data Manager not initialized');
+                    return;
+                }
+
+                if (!carDataManager.obdReader) {
+                    console.log('❌ No OBD reader available - please connect first');
+                    alert('Please connect to an OBD device first using "📱 Manual Select"');
+                    return;
+                }
+
+                console.log('🔍 OBD Reader Status Check:', {
+                    connected: carDataManager.obdReader.connected,
+                    realMode: carDataManager.obdReader.realMode,
+                    hasCharacteristic: !!carDataManager.obdReader.characteristic,
+                    hasPort: !!carDataManager.obdReader.port,
+                    deviceName: carDataManager.obdReader.device?.name || 'Unknown'
+                });
+
                 console.log('🧪 MANUAL TEST: Calling readRealOBDData...');
                 await carDataManager.readRealOBDData();
                 console.log('✅ MANUAL TEST: Real data reading completed');
+
             } catch (error) {
                 console.error('❌ MANUAL TEST: Error during real data reading:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
+
+        // Make function globally accessible for debugging
+        window.testRealDataReading = testRealDataReading;
+
+        // Debug: Log when script loads
+        console.log('🚗 Car Voice App loaded successfully');
+        console.log('🔧 testRealDataReading function available:', typeof testRealDataReading);
+        console.log('🔧 carDataManager initialized:', !!carDataManager);
 
         // Video Upload and Management System
         class VideoManager {
