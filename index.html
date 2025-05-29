@@ -1751,6 +1751,11 @@
                                     🔧 Test RPM
                                 </button>
                             </div>
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                                <button type="button" class="connect-button" onclick="emergencyOBDFix()" style="background: linear-gradient(45deg, #f44336, #d32f2f); font-weight: bold; flex: 1; min-width: 160px; color: white;">
+                                    🚨 Emergency Fix
+                                </button>
+                            </div>
 
                         </div>
                     </form>
@@ -3663,11 +3668,162 @@
             }
         }
 
+        // Emergency OBDBLE Fix Function
+        async function emergencyOBDFix() {
+            try {
+                console.log('🚨 EMERGENCY OBD FIX: Starting emergency fix for OBDBLE...');
+                alert('🚨 EMERGENCY OBD FIX\n\nThis will aggressively try to fix your OBDBLE connection.\n\nMake sure your car engine is running!');
+
+                if (!carDataManager.obdReader || !carDataManager.obdReader.device) {
+                    alert('❌ No OBDBLE device found. Please connect first using "📱 Manual Select".');
+                    return false;
+                }
+
+                const obdReader = carDataManager.obdReader;
+                const device = obdReader.device;
+
+                console.log('🔍 Current device info:', {
+                    name: device.name,
+                    id: device.id,
+                    gattConnected: device.gatt?.connected
+                });
+
+                // Step 1: Force GATT reconnection
+                console.log('🔄 Step 1: Force GATT reconnection...');
+                try {
+                    if (device.gatt.connected) {
+                        device.gatt.disconnect();
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    await device.gatt.connect();
+                    console.log('✅ GATT reconnected');
+                } catch (gattError) {
+                    console.log('⚠️ GATT reconnection failed:', gattError);
+                }
+
+                // Step 2: Scan all services aggressively
+                console.log('🔍 Step 2: Aggressive service scan...');
+                const services = await device.gatt.getPrimaryServices();
+                console.log('📋 All services found:', services.map(s => s.uuid));
+
+                // Step 3: Try each service for writable characteristics
+                let fixedCharacteristic = null;
+                let fixedService = null;
+
+                for (const service of services) {
+                    try {
+                        console.log(`🔍 Checking service: ${service.uuid}`);
+                        const characteristics = await service.getCharacteristics();
+                        console.log(`📋 Characteristics in ${service.uuid}:`, characteristics.map(c => ({
+                            uuid: c.uuid,
+                            properties: {
+                                read: c.properties.read,
+                                write: c.properties.write,
+                                writeWithoutResponse: c.properties.writeWithoutResponse,
+                                notify: c.properties.notify
+                            }
+                        })));
+
+                        for (const char of characteristics) {
+                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                                console.log(`✅ Found writable characteristic: ${char.uuid} in service ${service.uuid}`);
+                                fixedCharacteristic = char;
+                                fixedService = service;
+                                break;
+                            }
+                        }
+                        if (fixedCharacteristic) break;
+                    } catch (serviceError) {
+                        console.log(`⚠️ Error checking service ${service.uuid}:`, serviceError);
+                    }
+                }
+
+                if (fixedCharacteristic) {
+                    // Step 4: Set up the fixed connection
+                    console.log('🔧 Step 4: Setting up fixed connection...');
+                    obdReader.characteristic = fixedCharacteristic;
+                    obdReader.service = fixedService;
+                    obdReader.useWriteWithoutResponse = fixedCharacteristic.properties.writeWithoutResponse;
+
+                    // Set up notifications
+                    if (fixedCharacteristic.properties.notify) {
+                        try {
+                            await fixedCharacteristic.startNotifications();
+                            fixedCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                                const decoder = new TextDecoder();
+                                const response = decoder.decode(event.target.value);
+                                console.log('📥 OBDBLE notification:', response);
+                                obdReader.responseBuffer += response;
+                            });
+                            console.log('✅ Notifications enabled');
+                        } catch (notifyError) {
+                            console.log('⚠️ Could not enable notifications:', notifyError);
+                        }
+                    }
+
+                    // Step 5: Test the connection
+                    console.log('🧪 Step 5: Testing fixed connection...');
+                    try {
+                        // Send a simple test command
+                        const testCommand = 'ATZ\r'; // Reset command
+                        const encoder = new TextEncoder();
+                        const commandBytes = encoder.encode(testCommand);
+
+                        if (obdReader.useWriteWithoutResponse) {
+                            await fixedCharacteristic.writeValueWithoutResponse(commandBytes);
+                        } else {
+                            await fixedCharacteristic.writeValue(commandBytes);
+                        }
+
+                        console.log('✅ Test command sent successfully');
+
+                        // Wait for response
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        // Update status
+                        const statusEl = document.getElementById('obdStatus');
+                        statusEl.textContent = `🟢 REAL OBD DATA - ${device.name} Connected (Emergency Fixed)`;
+                        statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                        statusEl.style.color = '#34a853';
+                        statusEl.style.fontWeight = 'bold';
+
+                        console.log('✅ EMERGENCY FIX SUCCESSFUL!');
+                        alert(`✅ EMERGENCY FIX SUCCESSFUL!\n\nOBDBLE connection restored!\nService: ${fixedService.uuid}\nCharacteristic: ${fixedCharacteristic.uuid}\n\nTry the RPM test now!`);
+
+                        // Restart data reading
+                        if (carDataManager.updateInterval) {
+                            clearInterval(carDataManager.updateInterval);
+                            carDataManager.updateInterval = null;
+                        }
+                        carDataManager.startRealOBDDataReading();
+
+                        return true;
+
+                    } catch (testError) {
+                        console.log('❌ Test command failed:', testError);
+                        alert('❌ Connection fixed but test failed. The device may not be a standard OBD adapter.');
+                        return false;
+                    }
+
+                } else {
+                    console.log('❌ No writable characteristic found in any service');
+                    alert('❌ Emergency fix failed.\n\nYour OBDBLE device may not be a standard OBD-II adapter or may be incompatible.');
+                    return false;
+                }
+
+            } catch (error) {
+                console.error('❌ Emergency fix failed:', error);
+                alert('❌ Emergency fix error: ' + error.message);
+                return false;
+            }
+        }
+
         // Make functions globally accessible for debugging
         window.testRealDataReading = testRealDataReading;
         window.forceRealOBDConnection = forceRealOBDConnection;
         window.fixOBDCommunication = fixOBDCommunication;
         window.testRPMCommand = testRPMCommand;
+        window.emergencyOBDFix = emergencyOBDFix;
 
         // Debug: Log when script loads
         console.log('🚗 Car Voice App loaded successfully');
