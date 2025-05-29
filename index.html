@@ -1743,6 +1743,11 @@
                                     🧪 Test Connection
                                 </button>
                             </div>
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                                <button type="button" class="connect-button" onclick="fixOBDCommunication()" style="background: linear-gradient(45deg, #e91e63, #9c27b0); font-weight: bold; flex: 1; min-width: 140px;">
+                                    🔧 Fix Communication
+                                </button>
+                            </div>
 
                         </div>
                     </form>
@@ -2655,7 +2660,63 @@
                     };
 
                     console.error('❌ No communication method available. Debug info:', errorDetails);
-                    throw new Error(`No real OBD communication method available. Debug: ${JSON.stringify(errorDetails)}`);
+
+                    // Try to re-establish communication if device is connected but characteristic is missing
+                    if (this.device && this.device.gatt && this.device.gatt.connected && !this.characteristic) {
+                        console.log('🔄 Device connected but no characteristic - attempting to re-establish communication...');
+                        try {
+                            // Try to reconnect to services and characteristics
+                            const services = await this.device.gatt.getPrimaryServices();
+                            console.log('🔍 Available services:', services.map(s => s.uuid));
+
+                            for (const service of services) {
+                                try {
+                                    const characteristics = await service.getCharacteristics();
+                                    console.log(`🔍 Service ${service.uuid} characteristics:`, characteristics.map(c => c.uuid));
+
+                                    for (const char of characteristics) {
+                                        if (char.properties.write || char.properties.writeWithoutResponse) {
+                                            console.log('✅ Found writable characteristic:', char.uuid);
+                                            this.characteristic = char;
+                                            this.service = service;
+                                            this.useWriteWithoutResponse = char.properties.writeWithoutResponse;
+
+                                            // Set up notifications if available
+                                            if (char.properties.notify) {
+                                                try {
+                                                    await char.startNotifications();
+                                                    char.addEventListener('characteristicvaluechanged', (event) => {
+                                                        const decoder = new TextDecoder();
+                                                        const response = decoder.decode(event.target.value);
+                                                        console.log('📥 Notification received:', response);
+                                                        this.responseBuffer += response;
+                                                    });
+                                                    console.log('✅ Notifications enabled for characteristic');
+                                                } catch (notifyError) {
+                                                    console.log('⚠️ Could not enable notifications:', notifyError);
+                                                }
+                                            }
+
+                                            console.log('✅ Communication re-established! Retrying command...');
+                                            // Now retry the command execution
+                                            return await this.executeRawCommand(command);
+                                        }
+                                    }
+                                } catch (charError) {
+                                    console.log('⚠️ Could not get characteristics for service:', service.uuid);
+                                }
+                            }
+
+                            console.log('❌ Could not find suitable characteristic for communication');
+                            throw new Error(`No suitable communication characteristic found. Debug: ${JSON.stringify(errorDetails)}`);
+
+                        } catch (reconnectError) {
+                            console.error('❌ Failed to re-establish communication:', reconnectError);
+                            throw new Error(`Communication re-establishment failed. Debug: ${JSON.stringify(errorDetails)}`);
+                        }
+                    } else {
+                        throw new Error(`No real OBD communication method available. Debug: ${JSON.stringify(errorDetails)}`);
+                    }
 
                 } catch (error) {
                     console.error('❌ Error executing real OBD command:', error);
@@ -3373,9 +3434,119 @@
             }
         }
 
+        // Fix Communication Channel Function
+        async function fixOBDCommunication() {
+            try {
+                console.log('🔧 FIXING OBD COMMUNICATION: Attempting to fix communication channel...');
+                alert('🔧 Attempting to fix OBD communication channel...\n\nThis will try to re-establish the connection to your OBDBLE device.');
+
+                if (!carDataManager.obdReader) {
+                    alert('❌ No OBD reader found. Please connect to a device first.');
+                    return false;
+                }
+
+                const obdReader = carDataManager.obdReader;
+
+                if (!obdReader.device || !obdReader.device.gatt) {
+                    alert('❌ No Bluetooth device reference found. Please reconnect.');
+                    return false;
+                }
+
+                console.log('🔍 Current device status:', {
+                    deviceName: obdReader.device.name,
+                    gattConnected: obdReader.device.gatt.connected,
+                    hasCharacteristic: !!obdReader.characteristic,
+                    hasPort: !!obdReader.port
+                });
+
+                // Reconnect GATT if needed
+                if (!obdReader.device.gatt.connected) {
+                    console.log('🔄 Reconnecting GATT...');
+                    await obdReader.device.gatt.connect();
+                    console.log('✅ GATT reconnected');
+                }
+
+                // Re-discover services and characteristics
+                console.log('🔍 Re-discovering services...');
+                const services = await obdReader.device.gatt.getPrimaryServices();
+                console.log('📋 Available services:', services.map(s => s.uuid));
+
+                let communicationFixed = false;
+
+                for (const service of services) {
+                    try {
+                        const characteristics = await service.getCharacteristics();
+                        console.log(`🔍 Service ${service.uuid} characteristics:`, characteristics.map(c => c.uuid));
+
+                        for (const char of characteristics) {
+                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                                console.log('✅ Found writable characteristic:', char.uuid);
+                                obdReader.characteristic = char;
+                                obdReader.service = service;
+                                obdReader.useWriteWithoutResponse = char.properties.writeWithoutResponse;
+
+                                // Set up notifications if available
+                                if (char.properties.notify) {
+                                    try {
+                                        await char.startNotifications();
+                                        char.addEventListener('characteristicvaluechanged', (event) => {
+                                            const decoder = new TextDecoder();
+                                            const response = decoder.decode(event.target.value);
+                                            console.log('📥 Notification received:', response);
+                                            obdReader.responseBuffer += response;
+                                        });
+                                        console.log('✅ Notifications enabled');
+                                    } catch (notifyError) {
+                                        console.log('⚠️ Could not enable notifications:', notifyError);
+                                    }
+                                }
+
+                                communicationFixed = true;
+                                break;
+                            }
+                        }
+                        if (communicationFixed) break;
+                    } catch (charError) {
+                        console.log('⚠️ Could not get characteristics for service:', service.uuid);
+                    }
+                }
+
+                if (communicationFixed) {
+                    // Update status
+                    const statusEl = document.getElementById('obdStatus');
+                    statusEl.textContent = `🟢 REAL OBD DATA - ${obdReader.device.name} Connected (Fixed)`;
+                    statusEl.style.background = 'rgba(52, 168, 83, 0.3)';
+                    statusEl.style.color = '#34a853';
+                    statusEl.style.fontWeight = 'bold';
+
+                    console.log('✅ OBD communication channel fixed!');
+                    alert(`✅ OBD COMMUNICATION FIXED!\n\nDevice: ${obdReader.device.name}\nCommunication channel re-established.\n\nClick the test button to verify!`);
+
+                    // Restart real data reading
+                    if (carDataManager.updateInterval) {
+                        clearInterval(carDataManager.updateInterval);
+                        carDataManager.updateInterval = null;
+                    }
+                    carDataManager.startRealOBDDataReading();
+
+                    return true;
+                } else {
+                    console.log('❌ Could not find suitable communication characteristic');
+                    alert('❌ Could not fix communication.\n\nThe device may not be a standard OBD adapter or may need to be reconnected.');
+                    return false;
+                }
+
+            } catch (error) {
+                console.error('❌ Fix communication failed:', error);
+                alert('❌ Error fixing communication: ' + error.message);
+                return false;
+            }
+        }
+
         // Make functions globally accessible for debugging
         window.testRealDataReading = testRealDataReading;
         window.forceRealOBDConnection = forceRealOBDConnection;
+        window.fixOBDCommunication = fixOBDCommunication;
 
         // Debug: Log when script loads
         console.log('🚗 Car Voice App loaded successfully');
