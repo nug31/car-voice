@@ -1,13 +1,29 @@
 # ESP8266 Car Voice Control Setup Guide
+## 🚗 **Dual Integration: SinricPro + Car Voice App**
+
+This setup provides **TWO ways** to control your car:
+1. **Google Assistant/Alexa** via SinricPro (your existing setup)
+2. **Car Voice Web App** via direct WiFi connection
 
 ## 🔧 Hardware Requirements
 
 ### Components Needed:
 - **ESP8266** (NodeMCU or Wemos D1 Mini)
-- **8-Channel Relay Module** (5V or 3.3V compatible)
+- **Relay modules** or **direct pin control**
 - **Jumper wires**
-- **Breadboard** (optional)
 - **12V car accessories** to control (optional for testing)
+
+### Your Existing Pin Setup:
+```
+Pin 16 (REM)    → Remote/Engine Control
+Pin 14 (ENGINE) → Engine Start
+Pin 15 (KACA1)  → Window Down
+Pin 0  (KACA2)  → Window Up
+Pin 4  (BAGASI1)→ Trunk Open
+Pin 5  (BAGASI2)→ Trunk Close
+Pin 12 (LIGHTS) → Lights Control (optional)
+Pin 13 (HORN)   → Horn Control (optional)
+```
 
 ## 📋 Wiring Diagram
 
@@ -40,18 +56,23 @@ GND          →  GND               →  Ground
 In Arduino IDE, go to **Tools → Manage Libraries** and install:
 - `ESP8266WiFi` (usually pre-installed)
 - `ArduinoJson` by Benoit Blanchon
+- `SinricPro` by Boris Jaeger (for Google Assistant/Alexa)
 
-### 3. Upload the Code
-1. Open `esp8266_car_control.ino` in Arduino IDE
-2. **IMPORTANT**: Update WiFi credentials:
-   ```cpp
-   const char* ssid = "YOUR_WIFI_NAME";        // Replace with your WiFi name
-   const char* password = "YOUR_WIFI_PASSWORD"; // Replace with your WiFi password
-   ```
-3. Select your ESP8266 board:
+### 3. Upload the Updated Code
+1. Open the updated `esp8266_car_control.ino` in Arduino IDE
+2. **WiFi credentials are already set** to "Fortuner" / "12345678"
+3. **SinricPro credentials are already configured** with your existing device IDs
+4. Select your ESP8266 board:
    - **Tools → Board → ESP8266 Boards → NodeMCU 1.0** (or your specific board)
-4. Select the correct COM port: **Tools → Port**
-5. Click **Upload** button
+5. Select the correct COM port: **Tools → Port**
+6. Click **Upload** button
+
+### 4. What's New in the Updated Code:
+- ✅ **Keeps your existing SinricPro setup** (Google Assistant/Alexa still works)
+- ✅ **Adds web server** for Car Voice App integration
+- ✅ **Uses your existing pin configuration**
+- ✅ **Same relay sequences** as your current setup
+- ✅ **Dual control** - both voice assistants work simultaneously
 
 ### 4. Find ESP8266 IP Address
 1. Open **Tools → Serial Monitor** (set baud rate to 115200)
@@ -73,14 +94,29 @@ In Arduino IDE, go to **Tools → Manage Libraries** and install:
 - You should see: `✅ Connected to ESP8266 at [IP_ADDRESS]`
 - Check browser console (F12) for connection logs
 
-## 🎮 Testing Your Setup
+## 🎮 Testing Your Dual Setup
 
-### Voice Commands That Control Hardware:
-- **"Start engine"** → Activates Relay 1 (Engine Start)
-- **"Stop engine"** → Deactivates Relay 1 (Engine Stop)
-- **"Open trunk"** or **"Buka bagasi"** → Pulse Relay 2 (Trunk Open)
-- **"Close trunk"** or **"Tutup bagasi"** → Pulse Relay 3 (Trunk Close)
+### 🗣️ **Method 1: Google Assistant/Alexa (SinricPro)**
+Your existing voice commands still work:
+- **"Hey Google, turn on Device 1"** → Engine Start
+- **"Hey Google, turn off Device 1"** → Engine Stop
+- **"Hey Google, turn on Device 2"** → Window Control
+- **"Hey Google, turn on Device 3"** → Trunk Open
+- **"Hey Google, turn off Device 3"** → Trunk Close
+
+### 🌐 **Method 2: Car Voice Web App**
+New voice commands via web interface:
+- **"Start engine"** → Engine Start (Pin 16+14 sequence)
+- **"Stop engine"** → Engine Stop
+- **"Open trunk"** or **"Buka bagasi"** → Trunk Open (Pin 4 sequence)
+- **"Close trunk"** or **"Tutup bagasi"** → Trunk Close (Pin 5 sequence)
 - **"Active all"** → Runs full sequence with real hardware
+
+### 🔄 **Both Methods Work Simultaneously!**
+- Use Google Assistant when driving
+- Use Car Voice App when testing or demonstrating
+- Both control the same physical hardware
+- Same pin sequences, same timing
 
 ### Manual Testing:
 You can also test individual relays by sending HTTP requests:
