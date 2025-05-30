@@ -1816,11 +1816,19 @@
                         <div class="form-group">
                             <label>Connection Method</label>
                             <select id="iotConnectionMethod">
+                                <option value="esp8266">ESP8266 WiFi (8-Channel Relay)</option>
                                 <option value="wifi">WiFi Network</option>
                                 <option value="bluetooth">Bluetooth LE</option>
                                 <option value="mqtt">MQTT Broker</option>
                                 <option value="websocket">WebSocket</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="esp8266Config" style="display: none;">
+                            <label>ESP8266 IP Address</label>
+                            <input type="text" id="esp8266IP" placeholder="192.168.1.100" value="192.168.1.100">
+                            <small style="color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 5px; display: block;">
+                                💡 Check your ESP8266 serial monitor for the IP address
+                            </small>
                         </div>
                         <button type="submit" class="connect-button">
                             📡 Connect IoT Sensors
@@ -3524,8 +3532,15 @@
             }
 
             // Enhanced engine control for new connection types
-            startEngine() {
+            async startEngine() {
                 this.realTimeData.engineRunning = true;
+
+                // Control real hardware if ESP8266 is connected
+                if (this.connections.iotSensors?.connected &&
+                    this.connections.iotSensors.system instanceof ESP8266Controller) {
+                    console.log('🔌 Sending start engine command to ESP8266...');
+                    await this.connections.iotSensors.system.startEngine();
+                }
 
                 // Adjust RPM based on connection type
                 if (this.connections.virtualCar?.connected) {
@@ -3547,11 +3562,42 @@
                 return "🚗 Starting your car engine... Engine started successfully!";
             }
 
-            stopEngine() {
+            async stopEngine() {
                 this.realTimeData.engineRunning = false;
                 this.realTimeData.engineRPM = 0;
                 this.realTimeData.vehicleSpeed = 0;
+
+                // Control real hardware if ESP8266 is connected
+                if (this.connections.iotSensors?.connected &&
+                    this.connections.iotSensors.system instanceof ESP8266Controller) {
+                    console.log('🔌 Sending stop engine command to ESP8266...');
+                    await this.connections.iotSensors.system.stopEngine();
+                }
+
                 return "🛑 Turning off your car engine... Engine stopped safely!";
+            }
+
+            // New methods for trunk control
+            async openTrunk() {
+                if (this.connections.iotSensors?.connected &&
+                    this.connections.iotSensors.system instanceof ESP8266Controller) {
+                    console.log('🔌 Sending open trunk command to ESP8266...');
+                    await this.connections.iotSensors.system.openTrunk();
+                    return "📦 Opening trunk... Trunk opened successfully!";
+                } else {
+                    return "📦 Trunk opened (simulated)";
+                }
+            }
+
+            async closeTrunk() {
+                if (this.connections.iotSensors?.connected &&
+                    this.connections.iotSensors.system instanceof ESP8266Controller) {
+                    console.log('🔌 Sending close trunk command to ESP8266...');
+                    await this.connections.iotSensors.system.closeTrunk();
+                    return "📦 Closing trunk... Trunk closed successfully!";
+                } else {
+                    return "📦 Trunk closed (simulated)";
+                }
             }
 
             getCarStatus() {
@@ -5033,6 +5079,16 @@
             }
         }
 
+        // Show/hide ESP8266 configuration
+        document.getElementById('iotConnectionMethod').addEventListener('change', function() {
+            const esp8266Config = document.getElementById('esp8266Config');
+            if (this.value === 'esp8266') {
+                esp8266Config.style.display = 'block';
+            } else {
+                esp8266Config.style.display = 'none';
+            }
+        });
+
         // IoT Sensors Connection
         async function connectIoTSensors(event) {
             event.preventDefault();
@@ -5045,15 +5101,35 @@
             statusEl.className = 'connection-status status-connecting';
 
             try {
-                // Simulate connection delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                let iotSensors;
 
-                // Initialize IoT sensor system
-                const iotSensors = new IoTSensorSystem(sensorType, connectionMethod);
-                carDataManager.connectIoTSensors(iotSensors);
+                if (connectionMethod === 'esp8266') {
+                    // ESP8266 Real Hardware Connection
+                    const esp8266IP = document.getElementById('esp8266IP').value;
+                    console.log(`🔌 Connecting to ESP8266 at ${esp8266IP}...`);
 
-                statusEl.textContent = `✅ Connected to ${sensorType} via ${connectionMethod}`;
+                    iotSensors = new ESP8266Controller(esp8266IP);
+                    const connected = await iotSensors.connect();
+
+                    if (!connected) {
+                        throw new Error('Failed to connect to ESP8266');
+                    }
+
+                    statusEl.textContent = `✅ Connected to ESP8266 at ${esp8266IP}`;
+                } else {
+                    // Simulate connection delay for other methods
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    // Initialize IoT sensor system
+                    iotSensors = new IoTSensorSystem(sensorType, connectionMethod);
+
+                    statusEl.textContent = `✅ Connected to ${sensorType} via ${connectionMethod}`;
+                }
+
                 statusEl.className = 'connection-status status-connected';
+
+                // Connect to car data manager
+                carDataManager.connectIoTSensors(iotSensors);
 
                 // Start IoT data collection
                 carDataManager.startIoTDataCollection();
@@ -5062,7 +5138,7 @@
 
             } catch (error) {
                 console.error('IoT sensors connection failed:', error);
-                statusEl.textContent = '❌ IoT Sensors Connection Failed';
+                statusEl.textContent = `❌ Connection Failed: ${error.message}`;
                 statusEl.className = 'connection-status status-disconnected';
             }
         }
@@ -5320,6 +5396,142 @@
             }
         }
 
+        // ESP8266 Controller Class for Real Hardware
+        class ESP8266Controller {
+            constructor(ipAddress) {
+                this.ipAddress = ipAddress;
+                this.baseURL = `http://${ipAddress}`;
+                this.connected = false;
+                this.relayStates = new Array(8).fill(false);
+                this.sensorType = 'esp8266';
+                this.connectionMethod = 'wifi';
+            }
+
+            async connect() {
+                try {
+                    console.log(`🔌 Testing connection to ESP8266 at ${this.ipAddress}...`);
+
+                    // Test connection by getting status
+                    const response = await fetch(`${this.baseURL}/status`, {
+                        method: 'GET',
+                        timeout: 5000
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ ESP8266 connected successfully:', data);
+                        this.connected = true;
+                        this.relayStates = data.relays?.map(r => r.state) || new Array(8).fill(false);
+                        return true;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('❌ ESP8266 connection failed:', error);
+                    this.connected = false;
+                    return false;
+                }
+            }
+
+            async controlRelay(channel, state, duration = 0) {
+                if (!this.connected) {
+                    console.error('ESP8266 not connected');
+                    return false;
+                }
+
+                try {
+                    const payload = {
+                        channel: channel,
+                        state: state,
+                        duration: duration
+                    };
+
+                    const response = await fetch(`${this.baseURL}/control`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log(`✅ Relay ${channel} ${state ? 'ON' : 'OFF'}:`, result);
+                        this.relayStates[channel - 1] = state;
+                        return true;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Failed to control relay ${channel}:`, error);
+                    return false;
+                }
+            }
+
+            async startEngine() {
+                console.log('🚗 ESP8266: Starting engine...');
+                return await this.makeRequest('/engine/start', 'POST');
+            }
+
+            async stopEngine() {
+                console.log('🛑 ESP8266: Stopping engine...');
+                return await this.makeRequest('/engine/stop', 'POST');
+            }
+
+            async openTrunk() {
+                console.log('📦 ESP8266: Opening trunk...');
+                return await this.makeRequest('/trunk/open', 'POST');
+            }
+
+            async closeTrunk() {
+                console.log('📦 ESP8266: Closing trunk...');
+                return await this.makeRequest('/trunk/close', 'POST');
+            }
+
+            async makeRequest(endpoint, method = 'GET') {
+                if (!this.connected) {
+                    console.error('ESP8266 not connected');
+                    return false;
+                }
+
+                try {
+                    const response = await fetch(`${this.baseURL}${endpoint}`, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log(`✅ ESP8266 ${endpoint}:`, result);
+                        return result;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`❌ ESP8266 request failed ${endpoint}:`, error);
+                    return false;
+                }
+            }
+
+            readSensorData() {
+                // Return realistic car data for dashboard
+                return {
+                    batteryLevel: 85 + Math.random() * 10,
+                    fuelLevel: 70 + Math.random() * 20,
+                    engineTemp: 190 + Math.random() * 10,
+                    engineRPM: Math.random() * 2500,
+                    vehicleSpeed: 0,
+                    mileage: 47800 + Math.random() * 500,
+                    sensorHealth: 'Good',
+                    connectionStrength: 95,
+                    hardwareConnected: this.connected,
+                    relayStates: this.relayStates
+                };
+            }
+        }
+
         // Simple Car Control Functions - NOW WITH VOICE
         function startEngine() {
             const statusEl = document.getElementById('demoStatus');
@@ -5509,7 +5721,7 @@
             }
         }
 
-        function processVoiceCommand(command) {
+        async function processVoiceCommand(command) {
             const statusEl = document.getElementById('voiceStatus');
 
             // Engine start commands
@@ -5517,7 +5729,7 @@
                 statusEl.textContent = '🚗 Starting engine...';
                 statusEl.style.color = '#34a853';
 
-                carDataManager.startEngine();
+                await carDataManager.startEngine();
                 speak('Engine started successfully. Your car is now running.');
 
                 setTimeout(() => {
@@ -5533,13 +5745,77 @@
                 statusEl.textContent = '🛑 Stopping engine...';
                 statusEl.style.color = '#f44336';
 
-                carDataManager.stopEngine();
+                await carDataManager.stopEngine();
                 speak('Engine stopped successfully. Your car is now turned off.');
 
                 setTimeout(() => {
                     statusEl.textContent = '✅ Engine stopped!';
                     statusEl.style.color = '#f44336';
                 }, 2000);
+                return;
+            }
+
+            // Trunk open commands (English and Indonesian)
+            if (command.includes('open trunk') || command.includes('buka bagasi')) {
+                statusEl.textContent = '📦 Opening trunk...';
+                statusEl.style.color = '#ff9800';
+
+                const result = await carDataManager.openTrunk();
+                speak('Trunk opened successfully.');
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Trunk opened!';
+                    statusEl.style.color = '#ff9800';
+                }, 2000);
+                return;
+            }
+
+            // Trunk close commands (English and Indonesian)
+            if (command.includes('close trunk') || command.includes('tutup bagasi')) {
+                statusEl.textContent = '📦 Closing trunk...';
+                statusEl.style.color = '#ff9800';
+
+                const result = await carDataManager.closeTrunk();
+                speak('Trunk closed successfully.');
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Trunk closed!';
+                    statusEl.style.color = '#ff9800';
+                }, 2000);
+                return;
+            }
+
+            // Active all sequence
+            if (command.includes('active all')) {
+                statusEl.textContent = '🚀 Running active all sequence...';
+                statusEl.style.color = '#9c27b0';
+
+                speak('Starting active all sequence.');
+
+                // Run the sequence: Engine On → Open Trunk → Close Trunk → Check Status → Engine Off
+                await carDataManager.startEngine();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await carDataManager.openTrunk();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await carDataManager.closeTrunk();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Check status
+                const statusMessage = carDataManager.getCarStatus();
+                speak(statusMessage);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Turn off engine
+                await carDataManager.stopEngine();
+
+                speak('Active all sequence completed successfully.');
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Active all sequence completed!';
+                    statusEl.style.color = '#9c27b0';
+                }, 1000);
                 return;
             }
 
