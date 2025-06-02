@@ -329,7 +329,7 @@ void setupRoutes() {
   });
 }
 
-void controlRelay(int channel, bool state, int duration = 0) {
+void controlRelay(int channel, bool state, int duration) {
   if (channel < 0 || channel >= 8) return;
 
   relayStates[channel] = state;
