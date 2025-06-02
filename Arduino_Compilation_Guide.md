@@ -65,11 +65,17 @@ Error: Board esp8266:esp8266:nodemcuv2 not found
 3. **Tools → Board → Boards Manager**
 4. Search "ESP8266" and install
 
+### **Default Parameter Errors:**
+```
+error: default argument given for parameter 3 of 'void controlRelay(int, bool, int)' [-fpermissive]
+```
+**Solution:** This has been fixed in the latest version. Default parameters should only be in declaration, not definition.
+
 ### **Upload Errors:**
 ```
 error: espcomm_upload_mem failed
 ```
-**Solution:** 
+**Solution:**
 - Check COM port selection
 - Press and hold FLASH button during upload
 - Try different upload speed (9600 or 57600)
